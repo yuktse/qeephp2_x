@@ -431,11 +431,11 @@ abstract class Helper_Array
      * // )
      * @endcode
      *
-     * 如果$extractKeys的形式是这样array('product_id' => 'product_id_2')，则结果中对应的key会做一个转换：
+     * 如果$extractKeys的形式是这样array('product_id' => 'pid')，则结果中对应的key会做一个转换：
      * // 输出结果
      * // array(
-     * //   '0' => array('product_id_2' => 111),
-     * //   '1' => array('product_id_2' => 222),
+     * //   '0' => array('pid' => 111),
+     * //   '1' => array('pid' => 222),
      * // )
      *
      * @param array $data 要重构的数组
