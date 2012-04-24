@@ -89,13 +89,13 @@ class QColl implements Iterator, ArrayAccess, Countable
      */
     static function createFromArray(array $objects, $type, $keep_keys = false)
     {
-        if(count($objects) == 0) return new QColl($type);
+        if (count($objects) == 0) return new QColl($type);
 
         // 增强，可以识别普通数组, yuk
         if (is_numeric($objects[0])) { // 如果是数字，find by ID
-            $meta = QDB_ActiveRecord_Meta::instance($type);
-            $pks = $meta->table->getPK();
-            return $meta->find($pks[0] . ' in (?)', $objects)->getAll();
+            if ($this->idname_count() > 1) throw new QException('createFromArray时，如果参数$objects是数字数组，对象主键不能超过1个');
+            $pks = $this->idname();
+            return $this->meta()->find(reset($pks) . ' in (?)', $objects)->getAll();
 
         } elseif (is_array($objects[0])) {
             foreach ($objects as & $obj) {
@@ -554,6 +554,124 @@ class QColl implements Iterator, ArrayAccess, Countable
         }
         // LC_MSG: 集合只能容纳 "%s" 类型的对象，而不是 "%s" 类型的值.
         throw new QException(__('集合只能容纳 "%s" 类型的对象，而不是 "%s" 类型的值.', $this->_type, $type));
+    }
+
+    /**
+     * 采用$items中的数据。并且会删掉QColl中有，但$items中没有的记录。
+     *
+     * @param array $items 要采用的数据
+     * @param null|string $objIdKey 集合中的对象的主键名，不设置则尝试自动获取
+     * @param null|string $itemIdKey 在$items中对应的主键名，不设置则与$objIdKey一样
+     *
+     * @return QColl
+     * @author yuk
+     *
+     */
+    function apply($items, $objIdKey = null, $itemIdKey = null)
+    {
+        if (empty($items)) return $this;
+        if ($this->idname_count() > 1) throw new QException('this obj\'s id count is more than 1, can not use apply method');
+
+        if (empty($objIdKey)) {
+            $idname = $this->idname();
+            $objIdKey = reset($idname);
+        }
+
+        if (empty($itemIdKey)) {
+            $itemIdKey = $objIdKey;
+        }
+
+        $idsToStore = Helper_Array::getCols($items, $itemIdKey);
+        $items = Helper_Array::toHashmap($items, $itemIdKey); //转换下标，为item id
+        $idsInDb = array();
+
+        foreach ($this as $obj) {
+            $id = $obj->$objIdKey;
+            if (in_array($id, $idsToStore)) {
+                $obj->changeProps($items[$id]);
+                $idsInDb[] = $id;
+            } else {
+                if (!$obj->id()) continue;
+                $obj->destroy();
+            }
+        }
+
+        // 添加新items
+        foreach ($items as $item) {
+            if (isset($item[$itemIdKey])) {
+                $id = $item[$itemIdKey];
+                if (in_array($id, $idsInDb)) continue; // 旧记录中已有，不必添加
+            }
+            $this->push($item);
+        }
+
+        return $this;
+    }
+
+    /**
+     * 在集合后面插入一个item
+     * @param mixed $item
+     * @return QColl
+     * @author yuk
+     */
+    function push($item)
+    {
+        $this->_checkType($item);
+        array_push($this->_coll, $item);
+        return $this;
+    }
+
+    /**
+     * 在集合后面弹出一个item
+     * @return mixed|boolean
+     * @author yuk
+     */
+    function pop()
+    {
+        return array_pop($this->_coll);
+    }
+
+    /**
+     * 在集合前面插入item
+     * @param mixed $item
+     * @return QColl
+     */
+    function unshift($item)
+    {
+        $this->_checkType($item);
+        array_unshift($this->_coll, $item);
+        return $this;
+    }
+
+
+    /**
+     * 返回对应的数据表meta
+     * @return QDB_ActiveRecord_Meta
+     * @author yuk
+     */
+    protected function meta()
+    {
+        return QDB_ActiveRecord_Meta::instance($this->_type);
+    }
+
+    /**
+     * 返回对应的数据表主键数
+     * @return int
+     * @author yuk
+     */
+    protected function idname_count()
+    {
+        return $this->meta()->idname_count;
+    }
+
+    /**
+     * 返回对应的数据表主键
+     * @return array
+     * @author yuk
+     */
+    protected function idname()
+    {
+        return $this->meta()->idname;
     }
 
 }
