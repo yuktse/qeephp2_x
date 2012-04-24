@@ -93,9 +93,11 @@ class QColl implements Iterator, ArrayAccess, Countable
 
         // 增强，可以识别普通数组, yuk
         if (is_numeric($objects[0])) { // 如果是数字，find by ID
-            if ($this->idname_count() > 1) throw new QException('createFromArray时，如果参数$objects是数字数组，对象主键不能超过1个');
-            $pks = $this->idname();
-            return $this->meta()->find(reset($pks) . ' in (?)', $objects)->getAll();
+
+            $meta = QDB_ActiveRecord_Meta::instance($type);
+            $pks = $meta->idname;
+            if ($meta->idname_count != 1) throw new QException('createFromArray时，如果参数$objects是数字数组，对象主键只能是1个');
+            return $meta->find(reset($pks) . ' in (?)', $objects)->getAll();
 
         } elseif (is_array($objects[0])) {
             foreach ($objects as & $obj) {
