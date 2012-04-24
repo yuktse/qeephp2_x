@@ -443,6 +443,7 @@ abstract class Helper_Array
      * @param string|null $hashmapKey 将结果hashmap By $hashmapKey
      *
      * @return array 重构后的数组
+     * @author yuk
      */
     static function restruct($data, $extractKeys = null, $hashmapKey = null)
     {

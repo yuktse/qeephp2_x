@@ -89,9 +89,22 @@ class QColl implements Iterator, ArrayAccess, Countable
      */
     static function createFromArray(array $objects, $type, $keep_keys = false)
     {
+        if(count($objects) == 0) return new QColl($type);
+
+        // 增强，可以识别普通数组, yuk
+        if (is_numeric($objects[0])) { // 如果是数字，find by ID
+            $meta = QDB_ActiveRecord_Meta::instance($type);
+            $pks = $meta->table->getPK();
+            return $meta->find($pks[0] . ' in (?)', $objects)->getAll();
+
+        } elseif (is_array($objects[0])) {
+            foreach ($objects as & $obj) {
+                $obj = new $type($obj); // 转换为对象
+            }
+        }
+
         $coll = new QColl($type);
-        if ($keep_keys)
-        {
+        if ($keep_keys) {
             foreach ($objects as $offset => $object) $coll[$offset] = $object;
         }
         else
@@ -122,8 +135,7 @@ class QColl implements Iterator, ArrayAccess, Countable
         $return = array();
         foreach (array_keys($this->_coll) as $offset)
         {
-            if (isset($this->_coll[$offset]->{$prop_name}))
-            {
+            if (isset($this->_coll[$offset]->{$prop_name})) {
                 $return[] = $this->_coll[$offset]->{$prop_name};
             }
         }
@@ -159,8 +171,7 @@ class QColl implements Iterator, ArrayAccess, Countable
      */
     function offsetGet($offset)
     {
-        if (isset($this->_coll[$offset]))
-        {
+        if (isset($this->_coll[$offset])) {
             return $this->_coll[$offset];
         }
         // LC_MSG: 无效的键名 "%s".
@@ -179,8 +190,7 @@ class QColl implements Iterator, ArrayAccess, Countable
      */
     function offsetSet($offset, $value)
     {
-        if (is_null($offset))
-        {
+        if (is_null($offset)) {
             $offset = count($this->_coll);
         }
         $this->_checkType($value);
@@ -287,8 +297,7 @@ class QColl implements Iterator, ArrayAccess, Countable
      */
     function first()
     {
-        if (count($this->_coll))
-        {
+        if (count($this->_coll)) {
             return reset($this->_coll);
         }
         // LC_MSG: "%s" 集合中没有任何对象.
@@ -302,8 +311,7 @@ class QColl implements Iterator, ArrayAccess, Countable
      */
     function last()
     {
-        if (count($this->_coll))
-        {
+        if (count($this->_coll)) {
             $keys = array_keys($this->_coll);
             $key = array_pop($keys);
             return $this->_coll[$key];
@@ -333,8 +341,7 @@ class QColl implements Iterator, ArrayAccess, Countable
      */
     function append($data)
     {
-        if (is_array($data) || ($data instanceof Iterator))
-        {
+        if (is_array($data) || ($data instanceof Iterator)) {
             foreach ($data as $item)
             {
                 $this->offsetSet(null, $item);
@@ -344,7 +351,7 @@ class QColl implements Iterator, ArrayAccess, Countable
         {
             // LC_MSG: "%s()" 的参数 "%s" 必须是 "%s"，但实际提供的是 "%s".
             throw new QException(__('"%s()" 的参数 "%s" 必须是 "%s"，但实际提供的是 "%s".',
-                    __METHOD__, '$data', '数组或实现了 Iterator 的对象', gettype($data)));
+                __METHOD__, '$data', '数组或实现了 Iterator 的对象', gettype($data)));
         }
 
         return $this;
@@ -368,8 +375,7 @@ class QColl implements Iterator, ArrayAccess, Countable
     {
         foreach ($this->_coll as $item)
         {
-            if ($strict)
-            {
+            if ($strict) {
                 if ($item->{$prop_name} === $needle) return $item;
             }
             else
@@ -391,8 +397,7 @@ class QColl implements Iterator, ArrayAccess, Countable
     function toHashMap($key_name, $value_name = null)
     {
         $ret = array();
-        if ($value_name)
-        {
+        if ($value_name) {
             foreach ($this->_coll as $obj)
             {
                 $ret[$obj[$key_name]] = $obj[$value_name];
@@ -419,9 +424,11 @@ class QColl implements Iterator, ArrayAccess, Countable
     function getCols($col)
     {
         $ret = array();
-        foreach ($this->_coll as $obj) 
+        foreach ($this->_coll as $obj)
         {
-            if (isset($obj[$col])) { $ret[] = $obj[$col]; }
+            if (isset($obj[$col])) {
+                $ret[] = $obj[$col];
+            }
         }
         return $ret;
     }
@@ -512,12 +519,10 @@ class QColl implements Iterator, ArrayAccess, Countable
     {
         $not_implement = false;
         $method = strtolower($method);
-        if (method_exists($this->_type, '_qcoll_callback'))
-        {
+        if (method_exists($this->_type, '_qcoll_callback')) {
             $map = call_user_func(array($this->_type, '_qcoll_callback'));
             $map = array_change_key_case($map, CASE_LOWER);
-            if (isset($map[$method]))
-            {
+            if (isset($map[$method])) {
                 array_unshift($args, $this->_coll);
                 return call_user_func_array(array($this->_type, $map[$method]), $args);
             }
@@ -539,8 +544,7 @@ class QColl implements Iterator, ArrayAccess, Countable
      */
     protected function _checkType($object)
     {
-        if (is_object($object))
-        {
+        if (is_object($object)) {
             if ($object instanceof $this->_type) return;
             $type = get_class($object);
         }
