@@ -12,7 +12,7 @@
  */
 
 /**
- * Helper_Array 类提供了一组简化数组操作的方法 
+ * Helper_Array 类提供了一组简化数组操作的方法
  *
  * @author YuLei Liao <liaoyulei@qeeyuan.com>
  * @version $Id: array.php 2630 2009-07-17 16:43:52Z jerry $
@@ -37,20 +37,18 @@ abstract class Helper_Array
      */
     static function removeEmpty(& $arr, $trim = true)
     {
-        foreach ($arr as $key => $value) 
+        foreach ($arr as $key => $value)
         {
-            if (is_array($value)) 
-            {
+            if (is_array($value)) {
                 self::removeEmpty($arr[$key]);
-            } 
-            else 
+            }
+            else
             {
                 $value = trim($value);
-                if ($value == '') 
-                {
+                if ($value == '') {
                     unset($arr[$key]);
-                } 
-                elseif ($trim) 
+                }
+                elseif ($trim)
                 {
                     $arr[$key] = $value;
                 }
@@ -85,9 +83,11 @@ abstract class Helper_Array
     static function getCols($arr, $col)
     {
         $ret = array();
-        foreach ($arr as $row) 
+        foreach ($arr as $row)
         {
-            if (isset($row[$col])) { $ret[] = $row[$col]; }
+            if (isset($row[$col])) {
+                $ret[] = $row[$col];
+            }
         }
         return $ret;
     }
@@ -138,16 +138,15 @@ abstract class Helper_Array
     static function toHashmap($arr, $key_field, $value_field = null)
     {
         $ret = array();
-        if ($value_field) 
-        {
-            foreach ($arr as $row) 
+        if ($value_field) {
+            foreach ($arr as $row)
             {
                 $ret[$row[$key_field]] = $row[$value_field];
             }
-        } 
-        else 
+        }
+        else
         {
-            foreach ($arr as $row) 
+            foreach ($arr as $row)
             {
                 $ret[$row[$key_field]] = $row;
             }
@@ -196,7 +195,7 @@ abstract class Helper_Array
     static function groupBy($arr, $key_field)
     {
         $ret = array();
-        foreach ($arr as $row) 
+        foreach ($arr as $row)
         {
             $key = $row[$key_field];
             $ret[$key][] = $row;
@@ -242,7 +241,7 @@ abstract class Helper_Array
      * @code php
      * $refs = null;
      * $tree = Helper_Array::tree($rows, 'id', 'parent', 'nodes', $refs);
-     * 
+     *
      * // 输出 id 为 3 的节点及其所有子节点
      * $id = 3;
      * dump($refs[$id]);
@@ -260,20 +259,18 @@ abstract class Helper_Array
                            $key_children = 'children', & $refs = null)
     {
         $refs = array();
-        foreach ($arr as $offset => $row) 
+        foreach ($arr as $offset => $row)
         {
             $arr[$offset][$key_children] = array();
             $refs[$row[$key_node_id]] =& $arr[$offset];
         }
 
         $tree = array();
-        foreach ($arr as $offset => $row) 
+        foreach ($arr as $offset => $row)
         {
             $parent_id = $row[$key_parent_id];
-            if ($parent_id)
-            {
-                if (!isset($refs[$parent_id]))
-                {
+            if ($parent_id) {
+                if (!isset($refs[$parent_id])) {
                     $tree[] =& $arr[$offset];
                     continue;
                 }
@@ -302,12 +299,11 @@ abstract class Helper_Array
     static function treeToArray($tree, $key_children = 'children')
     {
         $ret = array();
-        if (isset($tree[$key_children]) && is_array($tree[$key_children]))
-        {
+        if (isset($tree[$key_children]) && is_array($tree[$key_children])) {
             $children = $tree[$key_children];
             unset($tree[$key_children]);
             $ret[] = $tree;
-            foreach ($children as $node) 
+            foreach ($children as $node)
             {
                 $ret = array_merge($ret, self::treeToArray($node, $key_children));
             }
@@ -364,7 +360,7 @@ abstract class Helper_Array
      * 用法：
      * @code php
      * $rows = Helper_Array::sortByMultiCols($rows, array(
-     *     'parent' => SORT_ASC, 
+     *     'parent' => SORT_ASC,
      *     'name' => SORT_DESC,
      * ));
      * @endcode
@@ -378,17 +374,111 @@ abstract class Helper_Array
     {
         $sortArray = array();
         $sortRule = '';
-        foreach ($args as $sortField => $sortDir) 
+        foreach ($args as $sortField => $sortDir)
         {
-            foreach ($rowset as $offset => $row) 
+            foreach ($rowset as $offset => $row)
             {
                 $sortArray[$sortField][$offset] = $row[$sortField];
             }
             $sortRule .= '$sortArray[\'' . $sortField . '\'], ' . $sortDir . ', ';
         }
-        if (empty($sortArray) || empty($sortRule)) { return $rowset; }
+        if (empty($sortArray) || empty($sortRule)) {
+            return $rowset;
+        }
         eval('array_multisort(' . $sortRule . '$rowset);');
         return $rowset;
+    }
+
+    /**
+     * 重构二维数组，一般用来重构POST过来，有子对象的数据
+     * 例如POST过来有Order数据，同时又有Order_Product的数据
+     *
+     * 用法：
+     * @code php
+     * $_POST = array(
+     *      'order_id' => '007'
+     *      'product_id' => array(111, 222),// 属于Order_Product的字段
+     *      'product_name' => array('AAA', 'BBB'),// 属于Order_Product的字段
+     * );
+     * $orderProducts = Helper_Array::restruct($_POST);
+     * dump($orderProducts);
+     * // 输出结果为：
+     * // array(
+     * //   '0' => array('product_id' => 111, 'product_name' => 'AAA'),
+     * //   '1' => array('product_id' => 222, 'product_name' => 'BBB'),
+     * // )
+     * @endcode
+     *
+     * 如果想用product_id的值作为$orderProducts的下标，可以使用$hashmapKey参数：
+     * @code
+     * $orderProducts = Helper_Array::restruct($_POST, null, 'product_id');
+     * dump($orderProducts);
+     * // 输出结果为：
+     * // array(
+     * //   '111' => array('product_id' => 111, 'product_name' => 'AAA'),
+     * //   '222' => array('product_id' => 222, 'product_name' => 'BBB'),
+     * // )
+     * @endcode
+     *
+     * 如果结果中只需要一部分二维数组，可以使用$extractKeys参数：
+     * @code
+     * $orderProducts = Helper_Array::restruct($_POST, 'product_id');
+     * dump($orderProducts);
+     * // 输出结果为：
+     * // array(
+     * //   '0' => array('product_id' => 111),
+     * //   '1' => array('product_id' => 222),
+     * // )
+     * @endcode
+     *
+     * 如果$extractKeys的形式是这样array('product_id' => 'product_id_2')，则结果中对应的key会做一个转换：
+     * // 输出结果
+     * // array(
+     * //   '0' => array('product_id_2' => 111),
+     * //   '1' => array('product_id_2' => 222),
+     * // )
+     *
+     * @param array $data 要重构的数组
+     * @param array|string|null $extractKeys 要读取的键
+     * @param string|null $hashmapKey 将结果hashmap By $hashmapKey
+     *
+     * @return array 重构后的数组
+     */
+    static function restruct($data, $extractKeys = null, $hashmapKey = null)
+    {
+        $ret = array();
+        $extractKeys = Q::normalize($extractKeys);
+
+        foreach ($extractKeys as $extractKey => & $rendedKey) {
+            if (is_numeric($extractKey)) {
+                unset($extractKeys[$extractKey]);
+                $extractKey = $rendedKey;
+                $extractKeys[$extractKey] = $rendedKey;
+            }
+        }
+
+        foreach ($data as $key => $obj) {
+            if (!empty($extractKeys) && !isset($extractKeys[$key])) continue;
+
+
+            if (is_array($obj)) {
+                foreach ($obj as $index => $value) {
+                    if (is_numeric($index)) {
+                        if (isset($extractKeys[$key])) {
+                            $ret[$index][$extractKeys[$key]] = $value;
+                        } else {
+                            $ret[$index][$key] = $value;
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($hashmapKey) {
+            $ret = self::toHashmap($ret, $hashmapKey);
+        }
+
+        return $ret;
     }
 }
 
