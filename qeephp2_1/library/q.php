@@ -984,6 +984,40 @@ function url($udi, $params = null, $route_name = null, array $opts = null)
 }
 
 /**
+ * 返回一个完整的URL地址，包括协议与域名部分。
+ * @param $udi
+ * @param null $params
+ * @param null $route_name
+ * @param array|null $opts
+ *
+ * @return string
+ */
+function urlFull($udi, $params = null, $route_name = null, array $opts = null){
+    $ctx = QContext::instance();
+    return$ctx->siteUrl().$ctx->url($udi, $params, $route_name, $opts);
+}
+
+/**
+ * 返回日期时间格式
+ * @param int $timestamp
+ * @return string
+ */
+function dt($timestamp){
+    if(!$timestamp) return '';
+    return date('Y-m-d H:i:s',$timestamp);
+}
+
+/**
+ * 返回日期格式
+ * @param int $timestamp
+ * @return string
+ */
+function d($timestamp){
+    if(!$timestamp) return '';
+    return date('Y-m-d',$timestamp);
+}
+
+/**
  * 设置对象的自动载入
  */
 Q::registerAutoload();
