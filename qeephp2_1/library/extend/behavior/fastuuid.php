@@ -52,7 +52,7 @@ class Model_Behavior_Fastuuid extends QDB_ActiveRecord_Behavior_Abstract
     protected $_settings = array
     (
         //! 计算种子数的开始时间
-        'being_timestamp' => 1206576000, // 2008-03-27
+        'being_timestamp' => 1305216000, // 2011-5-13
         //! 计算 ID 时要添加多少位随机数
         'suffix_len' => 3
     );
