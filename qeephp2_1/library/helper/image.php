@@ -49,27 +49,132 @@ abstract class Helper_Image
      * @return Helper_ImageGD 从文件创建的 Helper_ImageGD 对象
      * @throw Q_NotImplementedException
      */
-    static function createFromFile($filename, $fileext)
+    static function createFromFile($filename, $fileext = null)
     {
-        $fileext = trim(strtolower($fileext), '.');
-        $ext2functions = array(
-            'jpg'  => 'imagecreatefromjpeg',
-            'jpeg' => 'imagecreatefromjpeg',
-            'png'  => 'imagecreatefrompng',
-            'gif'  => 'imagecreatefromgif'
-        );
+        if ($fileext) {
+            $fileext = trim(strtolower($fileext), '.');
+            $ext2functions = array(
+                'jpg' => 'imagecreatefromjpeg',
+                'jpeg' => 'imagecreatefromjpeg',
+                'png' => 'imagecreatefrompng',
+                'gif' => 'imagecreatefromgif'
+            );
 
-        if (!isset($ext2functions[$fileext]))
-        {
-        	throw new Q_NotImplementedException(__('imagecreateform' . $fileext));
+            if (!isset($ext2functions[$fileext])) {
+                throw new Q_NotImplementedException(__('imagecreateform' . $fileext));
+            }
+
+            $handle = call_user_func($ext2functions[$fileext], $filename);
+
+        } else { // 如果没有指定扩展名，尝试自动判断类型 yuk
+            if (function_exists('exif_imagetype')) {
+                $imgType = exif_imagetype($filename);
+            } else {
+                list(, , $imgType) = getimagesize($filename);
+            }
+
+            $imgType2function = array(
+                IMAGETYPE_JPEG => 'imagecreatefromjpeg',
+                IMAGETYPE_PNG => 'imagecreatefrompng',
+                IMAGETYPE_GIF => 'imagecreatefromgif'
+            );
+
+            if (!isset($imgType2function[$imgType])) {
+                throw new QException('invalid image type');
+            }
+
+            $handle = call_user_func($imgType2function[$imgType], $filename);
         }
 
-        $handle = call_user_func($ext2functions[$fileext], $filename);
         return new Helper_ImageGD($handle);
     }
 
-	/**
-	 * 将 16 进制颜色值转换为 rgb 值
+    /**
+     * 从MIME得到扩展名
+     * @static
+     * @param string $mime
+     * @return string
+     * @author yuk
+     */
+    static function mime2extname($mime)
+    {
+        switch ($mime) {
+            case 'image/gif':
+                return 'gif';
+            case 'image/jpeg':
+                return 'jpg';
+            case 'image/png':
+                return 'png';
+        }
+
+        return 'unknow';
+    }
+
+    /**
+     * 复制图片并按比例更改尺寸
+     * @static
+     * @param string $from 源路径
+     * @param string $to 目的路径
+     * @param int $maxWidth 默认为原尺寸
+     * @param int $maxHeight 默认为原尺寸
+     * @return mixed
+     * @author yuk
+     */
+    static function copyResampled($from, $to, $maxWidth = 0, $maxHeight = 0)
+    {
+        $imgInfo = getimagesize($from);
+        if (!$imgInfo) return;
+        if (!$maxWidth && !$maxHeight) return;
+
+        $oriWidth = $imgInfo[0];
+        $oriHeight = $imgInfo[1];
+        $mime = $imgInfo['mime'];
+
+        if ($maxHeight === 0) {
+            $ratio = $maxWidth / $oriWidth;
+        } elseif ($maxWidth === 0) {
+            $ratio = $maxHeight / $oriHeight;
+        } else {
+            $ratioW = $maxWidth / $oriWidth;
+            $ratioH = $maxHeight / $oriHeight;
+            $ratio = ($ratioW < $ratioH) ? $ratioW : $ratioH;
+        }
+        // 已经算出$ratio
+        do {
+            if ($ratio > 1) { // 如果原图过小，直接复制
+                copy($from, $to);
+                return;
+            }
+
+            if ($maxHeight === 0) {
+                $newHeight = intval($oriHeight * $ratio);
+                $newWidth = $maxWidth;
+                break;
+            }
+
+            if ($maxWidth === 0) {
+                $newWidth = intval($oriWidth * $ratio);
+                $newHeight = $maxHeight;
+                break;
+            }
+
+            if ($ratioW < $ratioH) {
+                $newHeight = intval($oriHeight * $ratio);
+                $newWidth = $maxWidth;
+            } else {
+                $newWidth = intval($oriWidth * $ratio);
+                $newHeight = $maxHeight;
+            }
+
+        } while (0);
+
+        $image = self::createFromFile($from);
+        $image->resampled($newWidth, $newHeight);
+        $image->save($to, $mime);
+    }
+
+    /**
+     * 将 16 进制颜色值转换为 rgb 值
      *
      * 用法：
      * @code php
@@ -80,15 +185,14 @@ abstract class Helper_Image
      *
      * @param string $color 颜色值
      * @param string $default 使用无效颜色值时返回的默认颜色
-	 *
-	 * @return array 由 RGB 三色组成的数组
-	 */
-	static function hex2rgb($color, $default = 'ffffff')
-	{
+     *
+     * @return array 由 RGB 三色组成的数组
+     */
+    static function hex2rgb($color, $default = 'ffffff')
+    {
         $hex = trim($color, '#&Hh');
         $len = strlen($hex);
-        if ($len == 3)
-        {
+        if ($len == 3) {
             $hex = "{$hex[0]}{$hex[0]}{$hex[1]}{$hex[1]}{$hex[2]}{$hex[2]}";
         }
         elseif ($len < 6)
@@ -97,7 +201,7 @@ abstract class Helper_Image
         }
         $dec = hexdec($hex);
         return array(($dec >> 16) & 0xff, ($dec >> 8) & 0xff, $dec & 0xff);
-	}
+    }
 }
 
 /**
@@ -131,7 +235,7 @@ class Helper_ImageGD
      */
     function __destruct()
     {
-    	$this->destroy();
+        $this->destroy();
     }
 
     /**
@@ -216,44 +320,44 @@ class Helper_ImageGD
         // 根据 pos 属性来决定如何定位原始图片
         switch (strtolower($pos))
         {
-        case 'left':
-            $ox = 0;
-            $oy = ($height - $sy) / 2;
-            break;
-        case 'right':
-            $ox = $width - $sx;
-            $oy = ($height - $sy) / 2;
-            break;
-        case 'top':
-            $ox = ($width - $sx) / 2;
-            $oy = 0;
-            break;
-        case 'bottom':
-            $ox = ($width - $sx) / 2;
-            $oy = $height - $sy;
-            break;
-        case 'top-left':
-        case 'left-top':
-            $ox = $oy = 0;
-            break;
-        case 'top-right':
-        case 'right-top':
-            $ox = $width - $sx;
-            $oy = 0;
-            break;
-        case 'bottom-left':
-        case 'left-bottom':
-            $ox = 0;
-            $oy = $height - $sy;
-            break;
-        case 'bottom-right':
-        case 'right-bottom':
-            $ox = $width - $sx;
-            $oy = $height - $sy;
-            break;
-        default:
-            $ox = ($width - $sx) / 2;
-            $oy = ($height - $sy) / 2;
+            case 'left':
+                $ox = 0;
+                $oy = ($height - $sy) / 2;
+                break;
+            case 'right':
+                $ox = $width - $sx;
+                $oy = ($height - $sy) / 2;
+                break;
+            case 'top':
+                $ox = ($width - $sx) / 2;
+                $oy = 0;
+                break;
+            case 'bottom':
+                $ox = ($width - $sx) / 2;
+                $oy = $height - $sy;
+                break;
+            case 'top-left':
+            case 'left-top':
+                $ox = $oy = 0;
+                break;
+            case 'top-right':
+            case 'right-top':
+                $ox = $width - $sx;
+                $oy = 0;
+                break;
+            case 'bottom-left':
+            case 'left-bottom':
+                $ox = 0;
+                $oy = $height - $sy;
+                break;
+            case 'bottom-right':
+            case 'right-bottom':
+                $ox = $width - $sx;
+                $oy = $height - $sy;
+                break;
+            default:
+                $ox = ($width - $sx) / 2;
+                $oy = ($height - $sy) / 2;
         }
 
         list ($r, $g, $b) = Helper_Image::hex2rgb($bgcolor, '0xffffff');
@@ -325,10 +429,10 @@ class Helper_ImageGD
 
         $default_options = array(
             'fullimage' => false,
-            'pos'       => 'center',
-            'bgcolor'   => '0xfff',
-            'enlarge'   => false,
-            'reduce'    => true,
+            'pos' => 'center',
+            'bgcolor' => '0xfff',
+            'enlarge' => false,
+            'reduce' => true,
         );
         $options = array_merge($default_options, $options);
 
@@ -346,8 +450,7 @@ class Helper_ImageGD
         $ratio_w = doubleval($width) / doubleval($full_w);
         $ratio_h = doubleval($height) / doubleval($full_h);
 
-        if ($options['fullimage'])
-        {
+        if ($options['fullimage']) {
             // 如果要保持完整图像，则选择最小的比率
             $ratio = $ratio_w < $ratio_h ? $ratio_w : $ratio_h;
         }
@@ -367,52 +470,74 @@ class Helper_ImageGD
         // 根据 pos 属性来决定如何定位
         switch (strtolower($options['pos']))
         {
-        case 'left':
-            $dst_x = 0;
-            $dst_y = ($height - $dst_h) / 2;
-            break;
-        case 'right':
-            $dst_x = $width - $dst_w;
-            $dst_y = ($height - $dst_h) / 2;
-            break;
-        case 'top':
-            $dst_x = ($width - $dst_w) / 2;
-            $dst_y = 0;
-            break;
-        case 'bottom':
-            $dst_x = ($width - $dst_w) / 2;
-            $dst_y = $height - $dst_h;
-            break;
-        case 'top-left':
-        case 'left-top':
-            $dst_x = $dst_y = 0;
-            break;
-        case 'top-right':
-        case 'right-top':
-            $dst_x = $width - $dst_w;
-            $dst_y = 0;
-            break;
-        case 'bottom-left':
-        case 'left-bottom':
-            $dst_x = 0;
-            $dst_y = $height - $dst_h;
-            break;
-        case 'bottom-right':
-        case 'right-bottom':
-            $dst_x = $width - $dst_w;
-            $dst_y = $height - $dst_h;
-            break;
-        case 'center':
-        default:
-            $dst_x = ($width - $dst_w) / 2;
-            $dst_y = ($height - $dst_h) / 2;
+            case 'left':
+                $dst_x = 0;
+                $dst_y = ($height - $dst_h) / 2;
+                break;
+            case 'right':
+                $dst_x = $width - $dst_w;
+                $dst_y = ($height - $dst_h) / 2;
+                break;
+            case 'top':
+                $dst_x = ($width - $dst_w) / 2;
+                $dst_y = 0;
+                break;
+            case 'bottom':
+                $dst_x = ($width - $dst_w) / 2;
+                $dst_y = $height - $dst_h;
+                break;
+            case 'top-left':
+            case 'left-top':
+                $dst_x = $dst_y = 0;
+                break;
+            case 'top-right':
+            case 'right-top':
+                $dst_x = $width - $dst_w;
+                $dst_y = 0;
+                break;
+            case 'bottom-left':
+            case 'left-bottom':
+                $dst_x = 0;
+                $dst_y = $height - $dst_h;
+                break;
+            case 'bottom-right':
+            case 'right-bottom':
+                $dst_x = $width - $dst_w;
+                $dst_y = $height - $dst_h;
+                break;
+            case 'center':
+            default:
+                $dst_x = ($width - $dst_w) / 2;
+                $dst_y = ($height - $dst_h) / 2;
         }
 
-        imagecopyresampled($dest,  $this->_handle, $dst_x, $dst_y, 0, 0, $dst_w, $dst_h, $full_w, $full_h);
+        imagecopyresampled($dest, $this->_handle, $dst_x, $dst_y, 0, 0, $dst_w, $dst_h, $full_w, $full_h);
         imagedestroy($this->_handle);
         $this->_handle = $dest;
 
         return $this;
+    }
+
+    /**
+     * 指定格式保存图片
+     *
+     * @param string $filename 文件名
+     * @param string $mime 类型
+     * @author yuk
+     */
+    function save($filename, $mime)
+    {
+        switch ($mime) {
+            case 'image/gif':
+                $this->saveAsGif($filename);
+                break;
+            case 'image/jpeg':
+                $this->saveAsJpeg($filename);
+                break;
+            case 'image/png':
+                $this->saveAsPng($filename);
+                break;
+        }
     }
 
     /**
@@ -459,10 +584,9 @@ class Helper_ImageGD
      */
     function destroy()
     {
-    	if (!$this->_handle)
-    	{
+        if (!$this->_handle) {
             @imagedestroy($this->_handle);
-    	}
+        }
         $this->_handle = null;
         return $this;
     }
