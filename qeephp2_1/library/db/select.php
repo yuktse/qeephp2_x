@@ -132,12 +132,12 @@ class QDB_Select
      */
     protected static $_join_types = array
     (
-        self::INNER_JOIN    => self::INNER_JOIN,
-        self::LEFT_JOIN     => self::LEFT_JOIN,
-        self::RIGHT_JOIN    => self::RIGHT_JOIN,
-        self::FULL_JOIN     => self::FULL_JOIN,
-        self::CROSS_JOIN    => self::CROSS_JOIN,
-        self::NATURAL_JOIN  => self::NATURAL_JOIN
+        self::INNER_JOIN => self::INNER_JOIN,
+        self::LEFT_JOIN => self::LEFT_JOIN,
+        self::RIGHT_JOIN => self::RIGHT_JOIN,
+        self::FULL_JOIN => self::FULL_JOIN,
+        self::CROSS_JOIN => self::CROSS_JOIN,
+        self::NATURAL_JOIN => self::NATURAL_JOIN
     );
 
     /**
@@ -247,7 +247,7 @@ class QDB_Select
      */
     function __construct(QDB_Adapter_Abstract $conn)
     {
-        self::$_query_id ++;
+        self::$_query_id++;
         $this->_conn = $conn;
         $this->_parts = self::$_parts_init;
         $this->_query_params = self::$_query_params_init;
@@ -298,7 +298,7 @@ class QDB_Select
      */
     function distinct($flag = true)
     {
-        $this->_parts[self::DISTINCT] = (bool) $flag;
+        $this->_parts[self::DISTINCT] = (bool)$flag;
         return $this;
     }
 
@@ -399,8 +399,7 @@ class QDB_Select
      */
     function columns($cols = self::SQL_WILDCARD, $table = null)
     {
-        if (is_null($table))
-        {
+        if (is_null($table)) {
             $table = $this->_getCurrentTableName();
         }
         $this->_addCols($table, $cols);
@@ -424,8 +423,7 @@ class QDB_Select
      */
     function setColumns($cols = self::SQL_WILDCARD, $table = null)
     {
-        if (is_null($table))
-        {
+        if (is_null($table)) {
             $table = $this->_getCurrentTableName();
         }
         $this->_parts[self::COLUMNS] = array();
@@ -518,8 +516,7 @@ class QDB_Select
      */
     function link($link)
     {
-        if (! is_array($link))
-        {
+        if (!is_array($link)) {
             $links = array($link);
         }
         else
@@ -529,8 +526,7 @@ class QDB_Select
 
         foreach ($links as $link)
         {
-            if ($link instanceof QDB_ActiveRecord_Association_Abstract)
-            {
+            if ($link instanceof QDB_ActiveRecord_Association_Abstract) {
                 $this->_links[$link->mapping_name] = $link;
             }
             else
@@ -667,13 +663,11 @@ class QDB_Select
      */
     function union($select = array(), $type = self::SQL_UNION)
     {
-        if (! is_array($select))
-        {
+        if (!is_array($select)) {
             $select = array($select);
         }
 
-        if (! isset(self::$_union_types[$type]))
-        {
+        if (!isset(self::$_union_types[$type])) {
             // LC_MSG: 无效的 UNION 类型 "%s".
             throw new QDB_Select_Exception(__('无效的 UNION 类型 "%s".', $type));
         }
@@ -709,15 +703,13 @@ class QDB_Select
      */
     function group($expr)
     {
-        if (! is_array($expr))
-        {
+        if (!is_array($expr)) {
             $expr = array($expr);
         }
 
         foreach ($expr as $part)
         {
-            if ($part instanceof QDB_Expr)
-            {
+            if ($part instanceof QDB_Expr) {
                 /* @var $val QDB_Expr */
                 $part = $part->formatToString($this->_conn, $this->_getCurrentTableName(), $this->_columns_mapping);
             }
@@ -780,20 +772,17 @@ class QDB_Select
      */
     function order($expr)
     {
-        if (!is_array($expr))
-        {
+        if (!is_array($expr)) {
             $expr = array($expr);
         }
 
         $m = null;
         foreach ($expr as $val)
         {
-            if ($val instanceof QDB_Expr)
-            {
+            if ($val instanceof QDB_Expr) {
                 /* @var $val QDB_Expr */
                 $val = $val->formatToString($this->_conn, $this->_getCurrentTableName(), $this->_columns_mapping);
-                if (preg_match('/(.*\W)(' . self::SQL_ASC . '|' . self::SQL_DESC . ')\b/si', $val, $m))
-                {
+                if (preg_match('/(.*\W)(' . self::SQL_ASC . '|' . self::SQL_DESC . ')\b/si', $val, $m)) {
                     $val = trim($m[1]);
                     $dir = $m[2];
                 }
@@ -809,27 +798,22 @@ class QDB_Select
                 foreach ($_cols as $val)
                 {
                     $val = trim($val);
-                    if (empty($val))
-                    {
+                    if (empty($val)) {
                         continue;
                     }
                     $current_table_name = $this->_getCurrentTableName();
                     $dir = self::SQL_ASC;
                     $m = null;
-                    if (preg_match('/(.*\W)(' . self::SQL_ASC . '|' . self::SQL_DESC . ')\b/si', $val, $m))
-                    {
+                    if (preg_match('/(.*\W)(' . self::SQL_ASC . '|' . self::SQL_DESC . ')\b/si', $val, $m)) {
                         $val = trim($m[1]);
                         $dir = $m[2];
                     }
-                    if (!preg_match('/\(.*\)/', $val))
-                    {
-                        if (preg_match('/(.+)\.(.+)/', $val, $m))
-                        {
+                    if (!preg_match('/\(.*\)/', $val)) {
+                        if (preg_match('/(.+)\.(.+)/', $val, $m)) {
                             $current_table_name = $m[1];
                             $val = $m[2];
                         }
-                        if (isset($this->_columns_mapping[$val]))
-                        {
+                        if (isset($this->_columns_mapping[$val])) {
                             $val = $this->_columns_mapping[$val];
                         }
                         $val = $this->_conn->qid("{$current_table_name}.{$val}");
@@ -919,8 +903,7 @@ class QDB_Select
         $page_size = abs(intval($page_size));
         $base = abs(intval($base));
 
-        if ($page < $base)
-        {
+        if ($page < $base) {
             $page = $base;
         }
         $this->_query_params[self::PAGE_BASE] = $base;
@@ -934,6 +917,12 @@ class QDB_Select
      * 获得分页信息
      *
      * 要使用该方法，必须先用 limitPage() 指定有效的分页参数。
+     *
+     * 参数$para，可以有以下下标：
+     *  - count：由外部提供已经缓存好的记录数，这样就不用再计算多一次，减少DB查询。
+     *
+     * @param array $para add by yuk
+     *
      *
      * 该方法返回一个数组，包含下列信息：
      *
@@ -951,20 +940,22 @@ class QDB_Select
      *
      * @return array
      */
-    function getPagination()
+    function getPagination($para = null)
     {
-        $this->_query_params[self::PAGED_QUERY] = true;
-        if (! empty($this->_parts[self::ORDER]))
-        {
-            $order = $this->_parts[self::ORDER];
-            unset($this->_parts[self::ORDER]);
-        }
+        if (isset($para['count'])) {
+            $count = (int)$para['count']; // 由外部传入缓存的记录总数
+        } else {
+            $this->_query_params[self::PAGED_QUERY] = true;
+            if (!empty($this->_parts[self::ORDER])) {
+                $order = $this->_parts[self::ORDER];
+                unset($this->_parts[self::ORDER]);
+            }
 
-        $count = (int)$this->_conn->execute($this->__toString())->fetchOne();
-        $this->_query_params[self::PAGED_QUERY] = false;
-        if (isset($order))
-        {
-            $this->_parts[self::ORDER] = $order;
+            $count = (int)$this->_conn->execute($this->__toString())->fetchOne();
+            $this->_query_params[self::PAGED_QUERY] = false;
+            if (isset($order)) {
+                $this->_parts[self::ORDER] = $order;
+            }
         }
 
         $pagination = array();
@@ -972,31 +963,26 @@ class QDB_Select
         $pagination['page_count'] = ceil($count / $this->_query_params[self::PAGE_SIZE]);
         $pagination['first'] = $this->_query_params[self::PAGE_BASE];
         $pagination['last'] = $pagination['page_count'] + $this->_query_params[self::PAGE_BASE] - 1;
-        if ($pagination['last'] < $pagination['first'])
-        {
+        if ($pagination['last'] < $pagination['first']) {
             $pagination['last'] = $pagination['first'];
         }
 
         $page = $this->_query_params[self::CURRENT_PAGE];
 
-        if ($page >= $pagination['page_count'] + $this->_query_params[self::PAGE_BASE])
-        {
+        if ($page >= $pagination['page_count'] + $this->_query_params[self::PAGE_BASE]) {
             $page = $pagination['last'];
         }
-        if ($page < $this->_query_params[self::PAGE_BASE])
-        {
+        if ($page < $this->_query_params[self::PAGE_BASE]) {
             $page = $pagination['first'];
         }
-        if ($page < $pagination['last'] - 1)
-        {
+        if ($page < $pagination['last'] - 1) {
             $pagination['next'] = $page + 1;
         }
         else
         {
             $pagination['next'] = $pagination['last'];
         }
-        if ($page > $this->_query_params[self::PAGE_BASE])
-        {
+        if ($page > $this->_query_params[self::PAGE_BASE]) {
             $pagination['prev'] = $page - 1;
         }
         else
@@ -1030,12 +1016,13 @@ class QDB_Select
      * 上述代码执行后，$pagination 将包含查询的分页信息。
      *
      * @param mixed $return
+     * @param array $para 具体用法参考getPagination()中的$para参数 add by yuk
      *
      * @return QDB_Select
      */
-    function fetchPagination(& $return)
+    function fetchPagination(& $return, $para = null)
     {
-        $return = $this->getPagination();
+        $return = $this->getPagination($para);
         return $this;
     }
 
@@ -1051,7 +1038,7 @@ class QDB_Select
      */
     function forUpdate($flag = true)
     {
-        $this->for_update = (bool) $flag;
+        $this->for_update = (bool)$flag;
         return $this;
     }
 
@@ -1137,6 +1124,7 @@ class QDB_Select
         $row = $this->max($field, $alias)->query();
         return $row[$alias];
     }
+
     /**
      * 统计最小值
      *
@@ -1258,14 +1246,12 @@ class QDB_Select
      */
     function columnMapping($name, $mapping_to = null)
     {
-        if (is_array($name))
-        {
+        if (is_array($name)) {
             $this->_columns_mapping = array_merge($this->_columns_mapping, $name);
         }
         else
         {
-            if (empty($mapping_to))
-            {
+            if (empty($mapping_to)) {
                 unset($this->_columns_mapping[$name]);
             }
             else
@@ -1320,8 +1306,7 @@ class QDB_Select
     function getPart($part)
     {
         $part = strtolower($part);
-        if (! array_key_exists($part, $this->_parts))
-        {
+        if (!array_key_exists($part, $this->_parts)) {
             // LC_MSG: 无效的部分名称 "%s".
             throw new QDB_Select_Exception(__('无效的部分名称 "%s".', $part));
         }
@@ -1337,8 +1322,7 @@ class QDB_Select
      */
     function reset($part = null)
     {
-        if ($part == null)
-        {
+        if ($part == null) {
             $this->_parts = self::$_parts_init;
             $this->_query_params = self::$_query_params_init;
         }
@@ -1359,8 +1343,7 @@ class QDB_Select
      */
     function get($num = null, $included_links = null)
     {
-        if (!is_null($num))
-        {
+        if (!is_null($num)) {
             return $this->top($num)->query($included_links);
         }
         else
@@ -1368,6 +1351,7 @@ class QDB_Select
             return $this->query($included_links);
         }
     }
+
     /**
      * 返回符合主键的一个结果
      *
@@ -1376,12 +1360,14 @@ class QDB_Select
      *
      * @return mixed
      */
-    function getById($id,$included_links = null){
-    	if ($this->_meta->idname_count !=1){
-    		throw new QDB_Select_Exception(__('getById 方法只适用于单一主键模型'));
-    	}
-    	return $this->where(array(reset($this->_meta->idname) => $id))->getOne($included_links);
+    function getById($id, $included_links = null)
+    {
+        if ($this->_meta->idname_count != 1) {
+            throw new QDB_Select_Exception(__('getById 方法只适用于单一主键模型'));
+        }
+        return $this->where(array(reset($this->_meta->idname) => $id))->getOne($included_links);
     }
+
     /**
      * 仅返回一个结果
      *
@@ -1403,8 +1389,7 @@ class QDB_Select
      */
     function getAll($included_links = null)
     {
-        if ($this->_parts[self::LIMIT_QUERY])
-        {
+        if ($this->_parts[self::LIMIT_QUERY]) {
             return $this->query($included_links);
         }
         else
@@ -1449,8 +1434,7 @@ class QDB_Select
     function query($included_links = null)
     {
         $this->_query_params[self::NON_LAZY_QUERY] = Q::normalize($included_links);
-        if ($this->_query_params[self::AS_ARRAY])
-        {
+        if ($this->_query_params[self::AS_ARRAY]) {
             return $this->_queryArray(true);
         }
         else
@@ -1472,8 +1456,7 @@ class QDB_Select
         $offset = $this->_parts[self::LIMIT_OFFSET];
         $count = $this->_parts[self::LIMIT_COUNT];
 
-        if (is_null($offset) && is_null($count))
-        {
+        if (is_null($offset) && is_null($count)) {
             return $this->_conn->execute($sql);
         }
         else
@@ -1490,21 +1473,18 @@ class QDB_Select
     function __toString()
     {
         $sql = array();
-        if (strpos($this->_sql, 'SELECT') === false)
-        {
+        if (strpos($this->_sql, 'SELECT') === false) {
             $sql[] = self::SQL_SELECT;
         }
         foreach (array_keys(self::$_parts_init) as $part)
         {
-            if ($part == self::FROM)
-            {
+            if ($part == self::FROM) {
                 $sql[self::FROM] = '';
             }
             else
             {
                 $method = '_render' . ucfirst($part);
-                if (method_exists($this, $method))
-                {
+                if (method_exists($this, $method)) {
                     $sql[$part] = $this->$method();
                 }
             }
@@ -1512,8 +1492,7 @@ class QDB_Select
 
         $sql[self::FROM] = $this->_renderFrom();
 
-        if (!empty($sql[self::COLUMNS]) && !empty($sql[self::AGGREGATE]))
-        {
+        if (!empty($sql[self::COLUMNS]) && !empty($sql[self::AGGREGATE])) {
             // SELECT `post`.`class` COUNT(id) AS count FROM `test`.`post` GROUP BY class
             // ===>
             // SELECT `post`.`class`, COUNT(id) AS count FROM `test`.`post` GROUP BY class
@@ -1523,11 +1502,9 @@ class QDB_Select
         $base_sql = $this->_sql;
         foreach ($sql as $offset => $part)
         {
-            if (trim($part))
-            {
+            if (trim($part)) {
                 $name = "%{$offset}%";
-                if (strpos($base_sql, $name) !== false)
-                {
+                if (strpos($base_sql, $name) !== false) {
                     $base_sql = str_replace($name, $part, $base_sql);
                     unset($sql[$offset]);
                 }
@@ -1552,45 +1529,43 @@ class QDB_Select
      */
     function __call($method, array $args)
     {
-        if(strncasecmp($method, 'get', 3) === 0)
-        {
+        if (strncasecmp($method, 'get', 3) === 0) {
             $method = substr($method, 3);
 
             //support get10start3 etc.
-            if (strpos(strtolower($method), 'start') !== false)
-            {
+            if (strpos(strtolower($method), 'start') !== false) {
                 $arr = explode('start', strtolower($method));
                 $num = intval(array_shift($arr));
                 $offset = intval(array_shift($arr));
                 return $this->limit($offset - 1, $num);
 
-            // support getByName getByNameAndSex etc.
-            }elseif (strncasecmp($method,'By',2) === 0){
-            	$method=substr($method,2);
-            	$keys=explode('And',$method);
-            	if (count($keys) != count($args)){
-            		throw new QDB_Select_Exception(__('参数数量不对应'));
-            	}
-            	return $this->where(array_change_key_case(array_combine($keys,$args),CASE_LOWER))->getOne();
+                // support getByName getByNameAndSex etc.
+            } elseif (strncasecmp($method, 'By', 2) === 0) {
+                $method = substr($method, 2);
+                $keys = explode('And', $method);
+                if (count($keys) != count($args)) {
+                    throw new QDB_Select_Exception(__('参数数量不对应'));
+                }
+                return $this->where(array_change_key_case(array_combine($keys, $args), CASE_LOWER))->getOne();
 
-            // support getAllByNameAndSex etc.
-            }elseif (strncasecmp($method,'AllBy',5) === 0){
-            	$method=substr($method,5);
-            	$keys=explode('And',$method);
-            	if (count($keys) != count($args)){
-            		throw new QDB_Select_Exception(__('参数数量不对应'));
-            	}
-            	return $this->where(array_change_key_case(array_combine($keys,$args),CASE_LOWER))->getAll();
+                // support getAllByNameAndSex etc.
+            } elseif (strncasecmp($method, 'AllBy', 5) === 0) {
+                $method = substr($method, 5);
+                $keys = explode('And', $method);
+                if (count($keys) != count($args)) {
+                    throw new QDB_Select_Exception(__('参数数量不对应'));
+                }
+                return $this->where(array_change_key_case(array_combine($keys, $args), CASE_LOWER))->getAll();
             }
 
             return $this->top(intval(substr($method, 3)));
         }
-        elseif (is_callable($this->_meta->class_name, 'find_'.$method))
+        elseif (is_callable($this->_meta->class_name, 'find_' . $method))
         {
             // Article::find()->hot()->getOne()
             // static method "find_hot" must define in Article model or Behaviors
-        	array_unshift($args, $this);
-        	return call_user_func_array(array($this->_meta, 'find_'.$method), $args);
+            array_unshift($args, $this);
+            return call_user_func_array(array($this->_meta, 'find_' . $method), $args);
         }
 
         // LC_MSG: QDB_Select 没有实现魔法方法 "%s".
@@ -1609,8 +1584,7 @@ class QDB_Select
         $handle = $this->getQueryHandle();
         /* @var $handle QDB_Result_Abstract */
 
-        if ($this->_query_params[self::RECURSION] > 0 && ! empty($this->_used_links))
-        {
+        if ($this->_query_params[self::RECURSION] > 0 && !empty($this->_used_links)) {
             // 对关联表进行查询，并组装数据
             $refs_value = null;
             $refs = null;
@@ -1629,24 +1603,21 @@ class QDB_Select
 
                 $tka = $link->target_key_alias;
                 $ska = $link->source_key_alias;
-                if (empty($refs_value[$ska]))
-                {
+                if (empty($refs_value[$ska])) {
                     continue;
                 }
 
                 $select = $link->target_table
-                               ->find("[{$link->target_key}] IN (?)", $refs_value[$ska])
-                               ->recursion($this->_query_params[self::RECURSION] - 1)
-                               ->linkForRecursion($link)
-                               ->order($link->on_find_order)
-                               ->select($link->on_find_keys)
-                               ->where($link->on_find_where);
-                if ($link->type == QDB::MANY_TO_MANY)
-                {
+                    ->find("[{$link->target_key}] IN (?)", $refs_value[$ska])
+                    ->recursion($this->_query_params[self::RECURSION] - 1)
+                    ->linkForRecursion($link)
+                    ->order($link->on_find_order)
+                    ->select($link->on_find_keys)
+                    ->where($link->on_find_where);
+                if ($link->type == QDB::MANY_TO_MANY) {
                     $select->join($link->mid_table->name, "[{$link->mid_target_key}] = [{$link->target_key}]");
                 }
-                if (is_int($link->on_find))
-                {
+                if (is_int($link->on_find)) {
                     $select->limit(0, $link->on_find);
                 }
                 elseif (is_array($link->on_find))
@@ -1659,16 +1630,14 @@ class QDB_Select
                 }
 
                 $target_rowset = $select->queryArray(false);
-                if ($link->on_find === 1)
-                {
+                if ($link->on_find === 1) {
                     $target_rowset = array(
                         $target_rowset
                     );
                 }
 
                 // 组装数据集
-                if ($link->one_to_one)
-                {
+                if ($link->one_to_one) {
                     foreach (array_keys($target_rowset) as $offset)
                     {
                         $v = $target_rowset[$offset][$tka];
@@ -1679,7 +1648,7 @@ class QDB_Select
                         {
                             $refs[$ska][$v][$i][$link->mapping_name] = $target_rowset[$offset];
                             unset($refs[$ska][$v][$i][$ska]);
-                            $i ++;
+                            $i++;
                         }
                     }
                 }
@@ -1703,8 +1672,7 @@ class QDB_Select
             unset($refs);
             unset($refs_value);
             unset($row);
-            if ($this->limit == 1)
-            {
+            if ($this->limit == 1) {
                 $row = reset($rowset);
                 unset($rowset);
             }
@@ -1714,8 +1682,7 @@ class QDB_Select
             // 非关联查询
             unset($row);
             unset($rowset);
-            if ($this->_parts[self::LIMIT_COUNT] == 1)
-            {
+            if ($this->_parts[self::LIMIT_COUNT] == 1) {
                 $row = $handle->fetchRow();
             }
             else
@@ -1724,10 +1691,8 @@ class QDB_Select
             }
         }
 
-        if (count($this->_parts[self::AGGREGATE]) && isset($rowset))
-        {
-            if (empty($this->_parts[self::GROUP]))
-            {
+        if (count($this->_parts[self::AGGREGATE]) && isset($rowset)) {
+            if (empty($this->_parts[self::GROUP])) {
                 return reset($rowset);
             }
             else
@@ -1736,8 +1701,7 @@ class QDB_Select
             }
         }
 
-        if (isset($row))
-        {
+        if (isset($row)) {
             return $row;
         }
         else
@@ -1768,8 +1732,7 @@ class QDB_Select
         $no_lazy_query = Q::normalize($this->_query_params[self::NON_LAZY_QUERY]);
         while (($row = $handle->fetchRow()))
         {
-            if ($this->_meta->inherit_type_field)
-            {
+            if ($this->_meta->inherit_type_field) {
                 $class_name = $row[$this->_meta->inherit_type_field];
             }
             $obj = new $class_name($row, QDB::FIELD, true);
@@ -1781,17 +1744,14 @@ class QDB_Select
             $rowset[] = $obj;
         }
 
-        if (empty($rowset))
-        {
+        if (empty($rowset)) {
             // 没有查询到数据时，返回 Null 对象或空集合
-            if (! $this->_parts[self::LIMIT_QUERY])
-            {
+            if (!$this->_parts[self::LIMIT_QUERY]) {
                 return $this->_meta->newObject();
             }
             else
             {
-                if ($this->_query_params[self::AS_COLL])
-                {
+                if ($this->_query_params[self::AS_COLL]) {
                     return new QDB_ActiveRecord_Association_Coll($this->_meta->class_name);
                 }
                 else
@@ -1801,15 +1761,13 @@ class QDB_Select
             }
         }
 
-        if (! $this->_parts[self::LIMIT_QUERY])
-        {
+        if (!$this->_parts[self::LIMIT_QUERY]) {
             // 创建一个单独的对象
             return reset($rowset);
         }
         else
         {
-            if ($this->_query_params[self::AS_COLL])
-            {
+            if ($this->_query_params[self::AS_COLL]) {
                 return QDB_ActiveRecord_Association_Coll::createFromArray($rowset, $this->_meta->class_name);
             }
             else
@@ -1826,8 +1784,7 @@ class QDB_Select
      */
     protected function _renderDistinct()
     {
-        if ($this->_parts[self::DISTINCT])
-        {
+        if ($this->_parts[self::DISTINCT]) {
             return self::SQL_DISTINCT;
         }
         else
@@ -1843,13 +1800,11 @@ class QDB_Select
      */
     protected function _renderColumns()
     {
-        if (empty($this->_parts[self::COLUMNS]))
-        {
+        if (empty($this->_parts[self::COLUMNS])) {
             return '';
         }
 
-        if ($this->_query_params[self::PAGED_QUERY])
-        {
+        if ($this->_query_params[self::PAGED_QUERY]) {
             return 'COUNT(*)';
         }
 
@@ -1861,20 +1816,17 @@ class QDB_Select
             // array($current_table_name, $col, $alias | null)
             list ($table_name, $col, $alias) = $entry;
             // $col 是一个字段名或者一个 QDB_Expr 对象
-            if ($col instanceof QDB_Expr)
-            {
+            if ($col instanceof QDB_Expr) {
                 /* @var $col QDB_Expr */
                 $columns[] = $col->formatToString($this->_conn, $table_name, $this->_columns_mapping);
             }
             else
             {
-                if (isset($this->_columns_mapping[$col]))
-                {
+                if (isset($this->_columns_mapping[$col])) {
                     $col = $this->_columns_mapping[$col];
                 }
                 $col = $this->_conn->qid("{$table_name}.{$col}");
-                if ($col != self::SQL_WILDCARD && $alias)
-                {
+                if ($col != self::SQL_WILDCARD && $alias) {
                     $columns[] = $this->_conn->qid($col, $alias, 'AS');
                 }
                 else
@@ -1885,14 +1837,12 @@ class QDB_Select
         }
 
         // 确定要查询的关联，从而确保查询主表时能够得到相关的关联字段
-        if ($this->_query_params[self::RECURSION] > 0)
-        {
+        if ($this->_query_params[self::RECURSION] > 0) {
             foreach ($this->_links as $link)
             {
                 /* @var $link QDB_ActiveRecord_Association_Abstract */
                 $link->init();
-                if (! $link->enabled || $link->on_find === false || $link->on_find === 'skip')
-                {
+                if (!$link->enabled || $link->on_find === false || $link->on_find === 'skip') {
                     continue;
                 }
                 $link->init();
@@ -1902,8 +1852,7 @@ class QDB_Select
         }
 
         // 如果指定了来源关联，则需要查询组装数据所需的关联字段
-        if ($this->_query_params[self::LINK_FOR_RECURSION])
-        {
+        if ($this->_query_params[self::LINK_FOR_RECURSION]) {
             $link = $this->_query_params[self::LINK_FOR_RECURSION];
             $columns[] = $link->target_table->getConn()->qid($link->target_key, $link->target_key_alias, 'AS');
         }
@@ -1922,8 +1871,7 @@ class QDB_Select
         foreach ($this->_parts[self::AGGREGATE] as $aggregate)
         {
             list (, $field, $alias) = $aggregate;
-            if ($alias)
-            {
+            if ($alias) {
                 $columns[] = $field . ' AS ' . $alias;
             }
             else
@@ -1957,13 +1905,11 @@ class QDB_Select
 
 
             // 如果不是第一个 FROM，则添加 JOIN
-            if (! empty($from))
-            {
+            if (!empty($from)) {
                 $tmp .= ' ' . strtoupper($table['join_type']) . ' ';
             }
 
-            if ($alias == $table['table_name'])
-            {
+            if ($alias == $table['table_name']) {
                 $tmp .= $this->_conn->qid("{$table['schema']}.{$table['table_name']}");
             }
             else
@@ -1972,16 +1918,14 @@ class QDB_Select
             }
 
             // 添加 JOIN 查询条件
-            if (! empty($from) && ! empty($table['join_cond']))
-            {
+            if (!empty($from) && !empty($table['join_cond'])) {
                 $tmp .= "\n  " . self::SQL_ON . ' ' . $table['join_cond'];
             }
 
             $from[] = $tmp;
         }
 
-        if (! empty($from))
-        {
+        if (!empty($from)) {
             return "\n " . self::SQL_FROM . ' ' . implode("\n", $from);
         }
         else
@@ -1999,19 +1943,16 @@ class QDB_Select
     protected function _renderUnion()
     {
         $sql = '';
-        if ($this->_parts[self::UNION])
-        {
+        if ($this->_parts[self::UNION]) {
             $parts = count($this->_parts[self::UNION]);
             foreach ($this->_parts[self::UNION] as $cnt => $union)
             {
                 list ($target, $type) = $union;
-                if ($target instanceof QDB_Select)
-                {
+                if ($target instanceof QDB_Select) {
                     $target = $target->__toString();
                 }
                 $sql .= $target;
-                if ($cnt < $parts - 1)
-                {
+                if ($cnt < $parts - 1) {
                     $sql .= ' ' . $type . ' ';
                 }
             }
@@ -2029,13 +1970,12 @@ class QDB_Select
     {
         $sql = '';
         if ((!empty($this->_parts[self::FROM]) || !empty($this->_sql))
-            && !is_null($this->_parts[self::WHERE]))
-        {
+            && !is_null($this->_parts[self::WHERE])
+        ) {
             $where = $this->_parts[self::WHERE]->formatToString($this->_conn, $this->_getCurrentTableName(), null, array(
                 $this, '_parseTableName'
             ));
-            if (! empty($where))
-            {
+            if (!empty($where)) {
                 $sql .= "\n " . self::SQL_WHERE . ' ' . $where;
             }
         }
@@ -2051,8 +1991,8 @@ class QDB_Select
     protected function _renderGroup()
     {
         if ((!empty($this->_parts[self::FROM]) || !empty($this->_sql))
-            && ! empty($this->_parts[self::GROUP]))
-        {
+            && !empty($this->_parts[self::GROUP])
+        ) {
             return "\n " . self::SQL_GROUP_BY . ' ' . implode(",\n\t", $this->_parts[self::GROUP]);
         }
         return '';
@@ -2066,8 +2006,8 @@ class QDB_Select
     protected function _renderHaving()
     {
         if ((!empty($this->_parts[self::FROM]) || !empty($this->_sql))
-            && ! empty($this->_parts[self::HAVING]))
-        {
+            && !empty($this->_parts[self::HAVING])
+        ) {
             return "\n " . self::SQL_HAVING . ' ' . implode(",\n\t", $this->_parts[self::HAVING]);
         }
         return '';
@@ -2080,8 +2020,7 @@ class QDB_Select
      */
     protected function _renderOrder()
     {
-        if (! empty($this->_parts[self::ORDER]))
-        {
+        if (!empty($this->_parts[self::ORDER])) {
             return "\n " . self::SQL_ORDER_BY . ' ' . implode(', ', $this->_parts[self::ORDER]);
         }
         return '';
@@ -2094,8 +2033,7 @@ class QDB_Select
      */
     protected function _renderForUpdate()
     {
-        if ($this->_parts[self::FOR_UPDATE])
-        {
+        if ($this->_parts[self::FOR_UPDATE]) {
             return "\n " . self::SQL_FOR_UPDATE;
         }
         return '';
@@ -2114,22 +2052,19 @@ class QDB_Select
      */
     protected function _join($join_type, $name, $cols, $cond = null, $cond_args = null)
     {
-        if (! isset(self::$_join_types[$join_type]))
-        {
+        if (!isset(self::$_join_types[$join_type])) {
             // LC_MSG: 无效的 JOIN 类型 "%s".
             throw new QDB_Select_Exception(__('无效的 JOIN 类型 "%s".', $join_type));
         }
 
-        if (count($this->_parts[self::UNION]))
-        {
+        if (count($this->_parts[self::UNION])) {
             // LC_MSG: 不能在使用 UNION 查询的同时使用 JOIN 查询.
             throw new QDB_Select_Exception(__('不能在使用 UNION 查询的同时使用 JOIN 查询.'));
         }
 
         // 根据 $name 的不同类型确定数据表名称、别名
         $m = array();
-        if (empty($name))
-        {
+        if (empty($name)) {
             $table = $this->_getCurrentTableName();
             $alias = '';
         }
@@ -2137,8 +2072,7 @@ class QDB_Select
         {
             foreach ($name as $alias => $table)
             {
-                if (! is_string($alias))
-                {
+                if (!is_string($alias)) {
                     $alias = '';
                 }
                 break;
@@ -2161,8 +2095,7 @@ class QDB_Select
         }
 
         // 确定 table_name 和 schema
-        if ($table instanceof QDB_Table)
-        {
+        if ($table instanceof QDB_Table) {
             /* @var $table QDB_Table */
             $schema = $table->schema;
             $table_name = $table->prefix . $table->name;
@@ -2170,8 +2103,7 @@ class QDB_Select
         else
         {
             $m = explode('.', $table);
-            if (isset($m[1]))
-            {
+            if (isset($m[1])) {
                 $schema = $m[0];
                 $table_name = $m[1];
             }
@@ -2186,8 +2118,7 @@ class QDB_Select
         $alias = $this->_uniqueAlias(empty($alias) ? $table_name : $alias);
 
         // 处理查询条件
-        if (! ($cond instanceof QDB_Cond))
-        {
+        if (!($cond instanceof QDB_Cond)) {
             $cond = QDB_Cond::createByArgs($cond, $cond_args);
         }
         /* @var $cond QDB_Cond */
@@ -2218,26 +2149,22 @@ class QDB_Select
         $m = null;
         foreach ($cols as $alias => $col)
         {
-            if (is_string($col))
-            {
+            if (is_string($col)) {
                 // 将包含多个字段的字符串打散
                 foreach (Q::normalize($col) as $col)
                 {
                     $current_table_name = $table_name;
                     // 检查是不是 "字段名 AS 别名"这样的形式
-                    if (preg_match('/^(.+)\s+' . self::SQL_AS . '\s+(.+)$/i', $col, $m))
-                    {
+                    if (preg_match('/^(.+)\s+' . self::SQL_AS . '\s+(.+)$/i', $col, $m)) {
                         $col = $m[1];
                         $alias = $m[2];
                     }
                     // 检查字段名是否包含表名称
-                    if (preg_match('/(.+)\.(.+)/', $col, $m))
-                    {
+                    if (preg_match('/(.+)\.(.+)/', $col, $m)) {
                         $current_table_name = $m[1];
                         $col = $m[2];
                     }
-                    if (isset($this->_columns_mapping[$col]))
-                    {
+                    if (isset($this->_columns_mapping[$col])) {
                         $col = $this->_columns_mapping[$col];
                     }
 
@@ -2267,21 +2194,17 @@ class QDB_Select
      */
     protected function _addConditions($cond, array $args, $part_type, $bool)
     {
-        if (!($cond instanceof QDB_Cond))
-        {
-            if (empty($cond))
-            {
+        if (!($cond instanceof QDB_Cond)) {
+            if (empty($cond)) {
                 return $this;
             }
             $cond = QDB_Cond::createByArgs($cond, $args);
         }
 
-        if (is_null($this->_parts[$part_type]))
-        {
+        if (is_null($this->_parts[$part_type])) {
             $this->_parts[$part_type] = new QDB_Cond();
         }
-        if ($bool)
-        {
+        if ($bool) {
             $this->_parts[$part_type]->andCond($cond);
         }
         else
@@ -2305,14 +2228,12 @@ class QDB_Select
     {
         $this->_parts[self::COLUMNS] = array();
         $this->_query_params[self::RECURSION] = 0;
-        if ($field instanceof QDB_Expr)
-        {
+        if ($field instanceof QDB_Expr) {
             $field = $field->formatToString($this->_conn, $this->_getCurrentTableName(), $this->_columns_mapping);
         }
         else
         {
-            if (isset($this->_columns_mapping[$field]))
-            {
+            if (isset($this->_columns_mapping[$field])) {
                 $field = $this->_columns_mapping[$field];
             }
             $field = $this->_conn->qsql($field, $this->_getCurrentTableName(), $this->_columns_mapping);
@@ -2332,9 +2253,8 @@ class QDB_Select
      */
     protected function _getCurrentTableName()
     {
-        if (is_array($this->_current_table))
-        {
-            list ($alias, ) = $this->_current_table;
+        if (is_array($this->_current_table)) {
+            list ($alias,) = $this->_current_table;
             $this->_current_table = $alias;
             return $alias;
         }
@@ -2357,8 +2277,7 @@ class QDB_Select
      */
     function _parseTableName($table_name)
     {
-        if (strpos($table_name, '.') !== false)
-        {
+        if (strpos($table_name, '.') !== false) {
             list ($schema, $table_name) = explode('.', $table_name);
         }
         else
@@ -2366,16 +2285,14 @@ class QDB_Select
             $schema = null;
         }
 
-        if (is_null($this->_meta) || ! isset($this->_meta->associations[$table_name]))
-        {
+        if (is_null($this->_meta) || !isset($this->_meta->associations[$table_name])) {
             return $table_name;
         }
 
         $assoc = $this->_meta->assoc($table_name)->init();
         $target_table = $assoc->target_meta->table;
 
-        if ($schema && $target_table->schema && $target_table->schema != $schema)
-        {
+        if ($schema && $target_table->schema && $target_table->schema != $schema) {
             return "{$schema}.{$table_name}";
         }
 
@@ -2384,30 +2301,29 @@ class QDB_Select
 
         switch ($assoc->type)
         {
-        case QDB::HAS_MANY:
-        case QDB::HAS_ONE:
-        case QDB::BELONGS_TO:
-            $key = "{$assoc->type}-{$assoc_table_name}";
-            if (! isset($this->_joined_tables[$key])) {
-                // 支持额外join 条件设定，用于关联查询
-                $join_cond_extra = '';
-                if (isset($this->_meta->props[$assoc->mapping_name]['assoc_params']['join_cond_extra'])) {
-                    $join_cond_extra = " AND " . trim($this->_meta->props[$assoc->mapping_name]['assoc_params']['join_cond_extra']);
+            case QDB::HAS_MANY:
+            case QDB::HAS_ONE:
+            case QDB::BELONGS_TO:
+                $key = "{$assoc->type}-{$assoc_table_name}";
+                if (!isset($this->_joined_tables[$key])) {
+                    // 支持额外join 条件设定，用于关联查询
+                    $join_cond_extra = '';
+                    if (isset($this->_meta->props[$assoc->mapping_name]['assoc_params']['join_cond_extra'])) {
+                        $join_cond_extra = " AND " . trim($this->_meta->props[$assoc->mapping_name]['assoc_params']['join_cond_extra']);
+                    }
+                    $this->joinInner($assoc_table_name, '', "[{$assoc_table_name}.{$assoc->target_key}] = " . "[{$current_table_name}.{$assoc->source_key}] {$join_cond_extra}");
+                    $this->_joined_tables[$key] = true;
                 }
-                $this->joinInner($assoc_table_name, '', "[{$assoc_table_name}.{$assoc->target_key}] = " . "[{$current_table_name}.{$assoc->source_key}] {$join_cond_extra}");
-                $this->_joined_tables[$key] = true;
-            }
-            break;
-        case QDB::MANY_TO_MANY:
-            $mid_table_name = $assoc->mid_table->getFullTableName();
-            $key = "{$assoc->type}-{$mid_table_name}";
-            if (! isset($this->_joined_tables[$key]))
-            {
-                $this->joinInner($mid_table_name, '', "[{$mid_table_name}.{$assoc->mid_source_key}] = " . "[{$current_table_name}.{$assoc->source_key}]");
-                $this->joinInner($assoc_table_name, '', "[{$assoc_table_name}.{$assoc->target_key}] = " . "[{$mid_table_name}.{$assoc->mid_target_key}]");
-                $this->_joined_tables[$key] = true;
-            }
-            break;
+                break;
+            case QDB::MANY_TO_MANY:
+                $mid_table_name = $assoc->mid_table->getFullTableName();
+                $key = "{$assoc->type}-{$mid_table_name}";
+                if (!isset($this->_joined_tables[$key])) {
+                    $this->joinInner($mid_table_name, '', "[{$mid_table_name}.{$assoc->mid_source_key}] = " . "[{$current_table_name}.{$assoc->source_key}]");
+                    $this->joinInner($assoc_table_name, '', "[{$assoc_table_name}.{$assoc->target_key}] = " . "[{$mid_table_name}.{$assoc->mid_target_key}]");
+                    $this->_joined_tables[$key] = true;
+                }
+                break;
         }
 
         return $assoc_table_name;
@@ -2422,12 +2338,10 @@ class QDB_Select
      */
     private function _uniqueAlias($name)
     {
-        if (empty($name))
-        {
+        if (empty($name)) {
             return '';
         }
-        if (is_array($name))
-        {
+        if (is_array($name)) {
             $c = end($name);
         }
         else
@@ -2435,9 +2349,9 @@ class QDB_Select
             $dot = strrpos($name, '.');
             $c = ($dot === false) ? $name : substr($name, $dot + 1);
         }
-        for ($i = 2; array_key_exists($c, $this->_parts[self::FROM]); ++ $i)
+        for ($i = 2; array_key_exists($c, $this->_parts[self::FROM]); ++$i)
         {
-            $c = $name . '_' . (string) $i;
+            $c = $name . '_' . (string)$i;
         }
         return $c;
     }
