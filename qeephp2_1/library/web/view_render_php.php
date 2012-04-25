@@ -83,8 +83,7 @@ class QView_Render_PHP
      */
     function __construct(array $config = null)
     {
-        if (is_array($config))
-        {
+        if (is_array($config)) {
             foreach ($config as $key => $value)
             {
                 $this->{$key} = $value;
@@ -117,8 +116,7 @@ class QView_Render_PHP
      */
     function assign($key, $data = null)
     {
-        if (is_array($key))
-        {
+        if (is_array($key)) {
             $this->_vars = array_merge($this->_vars, $key);
         }
         else
@@ -151,20 +149,20 @@ class QView_Render_PHP
         return $this->_vars;
     }
 
-	/**
+    /**
      * 清除所有模板变量
      *
      * @return QView_Render_PHP
-	 */
-	function cleanVars()
+     */
+    function cleanVars()
     {
         ///*
         $context = QContext::instance();
         $this->_vars = array(
-            '_ctx'          => $context,
-            '_BASE_DIR'     => $context->baseDir(),
-            '_BASE_URI'     => $context->baseUri(),
-            '_REQUEST_URI'  => $context->requestUri(),
+            '_ctx' => $context,
+            '_BASE_DIR' => $context->baseDir(),
+            '_BASE_URI' => $context->baseUri(),
+            '_REQUEST_URI' => $context->requestUri(),
         );
         //*/
 
@@ -183,13 +181,11 @@ class QView_Render_PHP
      */
     function display($viewname = null, array $vars = null, array $config = null)
     {
-        if (empty($viewname))
-        {
+        if (empty($viewname)) {
             $viewname = $this->_viewname;
         }
 
-        if (Q::ini('runtime_response_header'))
-        {
+        if (Q::ini('runtime_response_header')) {
             header('Content-Type: text/html; charset=' . Q::ini('i18n_response_charset'));
         }
 
@@ -215,8 +211,7 @@ class QView_Render_PHP
      */
     function fetch($viewname = null, array $vars = null, array $config = null)
     {
-        if (empty($viewname))
-        {
+        if (empty($viewname)) {
             $viewname = $this->_viewname;
         }
 
@@ -225,14 +220,11 @@ class QView_Render_PHP
         $extname = isset($config['file_extname']) ? $config['file_extname'] : $this->file_extname;
         $filename = "{$view_dir}/{$viewname}.{$extname}";
 
-        if (file_exists($filename))
-        {
-            if (!is_array($vars))
-            {
+        if (file_exists($filename)) {
+            if (!is_array($vars)) {
                 $vars = $this->_vars;
             }
-            if (is_null($this->_parser))
-            {
+            if (is_null($this->_parser)) {
                 $parser_name = $this->_parser_name;
                 $this->_parser = new $parser_name($view_dir);
             }
@@ -280,7 +272,7 @@ class QView_Render_PHP_Parser
 {
     /**
      * 视图文件扩展名
-     * 
+     *
      * @var string
      */
     protected $_extname;
@@ -358,11 +350,11 @@ class QView_Render_PHP_Parser
         if (!$view_id) $view_id = mt_rand();
 
         $stack = array(
-            'id'            => $view_id,
-            'contents'      => '',
-            'extends'       => '',
+            'id' => $view_id,
+            'contents' => '',
+            'extends' => '',
             'blocks_stacks' => array(),
-            'blocks'        => array(),
+            'blocks' => array(),
             'blocks_config' => array(),
             'nested_blocks' => array(),
         );
@@ -376,20 +368,18 @@ class QView_Render_PHP_Parser
         $stack['contents'] = ob_get_clean();
 
         // 如果有继承视图，则用继承视图中定义的块内容替换当前视图的块内容
-        if (is_array($inherited_stack))
-        {
+        if (is_array($inherited_stack)) {
             foreach ($inherited_stack['blocks'] as $block_name => $contents)
             {
-                if (isset($stack['blocks_config'][$block_name]))
-                {
+                if (isset($stack['blocks_config'][$block_name])) {
                     switch (strtolower($stack['blocks_config'][$block_name]))
                     {
-                    case 'append':
-                        $stack['blocks'][$block_name] .= $contents;
-                        break;
-                    case 'replace':
-                    default:
-                        $stack['blocks'][$block_name] = $contents;
+                        case 'append':
+                            $stack['blocks'][$block_name] .= $contents;
+                            break;
+                        case 'replace':
+                        default:
+                            $stack['blocks'][$block_name] = $contents;
                     }
                 }
                 else
@@ -410,8 +400,7 @@ class QView_Render_PHP_Parser
         // 保存对当前视图堆栈的修改
         $this->_stacks[$this->_current] = $stack;
 
-        if ($stack['extends'])
-        {
+        if ($stack['extends']) {
             // 如果有当前视图是从某个视图继承的，则载入继承视图
             $filename = "{$this->_view_dir}/{$stack['extends']}.{$this->_extname}";
             return $this->parse($filename, $view_id, $this->_stacks[$this->_current]);
@@ -444,6 +433,19 @@ class QView_Render_PHP_Parser
     }
 
     /**
+     * 定义一个区块，用来占位
+     *
+     * @param string $block_name
+     * @param mixed $config
+     * @author yuk
+     */
+    protected function _blockPlaceHolder($block_name, $config = null)
+    {
+        $this->_block($block_name, $config);
+        $this->_endblock();
+    }
+
+    /**
      * 开始定义一个区块
      *
      * @param string $block_name
@@ -454,8 +456,7 @@ class QView_Render_PHP_Parser
     protected function _block($block_name, $config = null)
     {
         $stack =& $this->_stacks[$this->_current];
-        if (!empty($stack['blocks_stacks']))
-        {
+        if (!empty($stack['blocks_stacks'])) {
             // 如果存在嵌套的 block，则需要记录下嵌套的关系
             $last = $stack['blocks_stacks'][count($stack['blocks_stacks']) - 1];
             $stack['nested_blocks'][] = array($block_name, $last);
