@@ -39,15 +39,15 @@ class QContext implements ArrayAccess
      * 指示 UDI 中的部分
      */
     // UDI 中的所有部分
-    const UDI_ALL        = 'all';
+    const UDI_ALL = 'all';
     // UDI 中的控制器
     const UDI_CONTROLLER = 'controller';
     // UDI 中的动作
-    const UDI_ACTION     = 'action';
+    const UDI_ACTION = 'action';
     // UDI 中的名字空间
-    const UDI_NAMESPACE  = 'ns';
+    const UDI_NAMESPACE = 'ns';
     // UDI 中的模块
-    const UDI_MODULE     = 'module';
+    const UDI_MODULE = 'module';
 
     /**
      * 指示 UDI 的默认值
@@ -55,11 +55,11 @@ class QContext implements ArrayAccess
     // 默认控制器
     const UDI_DEFAULT_CONTROLLER = 'default';
     // 默认动作
-    const UDI_DEFAULT_ACTION     = 'index';
+    const UDI_DEFAULT_ACTION = 'index';
     // 默认的模块
-    const UDI_DEFAULT_MODULE     = 'default';
+    const UDI_DEFAULT_MODULE = 'default';
     // 默认的名字空间
-    const UDI_DEFAULT_NAMESPACE  = 'default';
+    const UDI_DEFAULT_NAMESPACE = 'default';
 
     /**
      * 指示 URL 模式
@@ -69,7 +69,7 @@ class QContext implements ArrayAccess
     // 使用 PATHINFO
     const URL_MODE_PATHINFO = 'pathinfo';
     // 使用 URL 重写
-    const URL_MODE_REWRITE  = 'rewrite';
+    const URL_MODE_REWRITE = 'rewrite';
 
     /**
      * 请求包含的模块名
@@ -151,7 +151,7 @@ class QContext implements ArrayAccess
         self::UDI_MODULE => self::UDI_DEFAULT_MODULE,
         self::UDI_NAMESPACE => self::UDI_DEFAULT_NAMESPACE,
         self::UDI_CONTROLLER => self::UDI_DEFAULT_CONTROLLER,
-        self::UDI_ACTION     => self::UDI_DEFAULT_ACTION,
+        self::UDI_ACTION => self::UDI_DEFAULT_ACTION,
     );
 
     /**
@@ -169,32 +169,29 @@ class QContext implements ArrayAccess
      */
     function reinit($full_init = false)
     {
-        if ($full_init)
-        {
+        if ($full_init) {
             $this->_params = array();
             $this->_router = null;
         }
 
         self::$_request_uri = null;
-        self::$_base_uri    = null;
-        self::$_base_dir    = null;
-        self::$_url_mode    = null;
+        self::$_base_uri = null;
+        self::$_base_dir = null;
+        self::$_url_mode = null;
 
         // 如果有必要，初始化路由服务
         $url_mode = strtolower(Q::ini('dispatcher_url_mode'));
         if (is_null($this->_router)
-            && ($url_mode == self::URL_MODE_PATHINFO || $url_mode == self::URL_MODE_REWRITE))
-        {
+            && ($url_mode == self::URL_MODE_PATHINFO || $url_mode == self::URL_MODE_REWRITE)
+        ) {
             $this->_router = new QRouter();
             $this->_router->import(Q::ini('routes'), 'global_default_routes');
             $result = $this->_router->match('/' . ltrim($this->pathinfo(), '/'));
-            if ($result)
-            {
+            if ($result) {
                 foreach ($result as $var => $value)
                 {
                     if (strlen($value) === 0) continue;
-                    if (!isset($_GET[$var]) || strlen($_GET[$var]) === 0)
-                    {
+                    if (!isset($_GET[$var]) || strlen($_GET[$var]) === 0) {
                         $_GET[$var] = $_REQUEST[$var] = $value;
                     }
                 }
@@ -204,21 +201,20 @@ class QContext implements ArrayAccess
 
         // 从 $_GET 中提取请求参数
         $keys = array_keys($_GET);
-        if (!empty($keys))
-        {
+        if (!empty($keys)) {
             $keys = array_combine($keys, $keys);
             $keys = array_change_key_case($keys);
         }
 
         $udi = array();
         $udi[self::UDI_CONTROLLER] = (isset($keys[self::UDI_CONTROLLER]))
-                                     ? $_GET[$keys[self::UDI_CONTROLLER]] : null;
-        $udi[self::UDI_ACTION]     = (isset($keys[self::UDI_ACTION]))
-                                     ? $_GET[$keys[self::UDI_ACTION]] : null;
-        $udi[self::UDI_MODULE]     = (isset($keys[self::UDI_MODULE]))
-                                     ? $_GET[$keys[self::UDI_MODULE]] : null;
-        $udi[self::UDI_NAMESPACE]  = (isset($keys[self::UDI_NAMESPACE]))
-                                     ? $_GET[$keys[self::UDI_NAMESPACE]] : null;
+            ? $_GET[$keys[self::UDI_CONTROLLER]] : null;
+        $udi[self::UDI_ACTION] = (isset($keys[self::UDI_ACTION]))
+            ? $_GET[$keys[self::UDI_ACTION]] : null;
+        $udi[self::UDI_MODULE] = (isset($keys[self::UDI_MODULE]))
+            ? $_GET[$keys[self::UDI_MODULE]] : null;
+        $udi[self::UDI_NAMESPACE] = (isset($keys[self::UDI_NAMESPACE]))
+            ? $_GET[$keys[self::UDI_NAMESPACE]] : null;
 
         $this->changeRequestUDI($udi);
     }
@@ -592,8 +588,7 @@ class QContext implements ArrayAccess
     {
         static $protocol;
 
-        if (is_null($protocol))
-        {
+        if (is_null($protocol)) {
             list ($protocol) = explode('/', $_SERVER['SERVER_PROTOCOL']);
         }
         return strtolower($protocol);
@@ -646,8 +641,7 @@ class QContext implements ArrayAccess
     {
         if (self::$_request_uri) return self::$_request_uri;
 
-        if (isset($_SERVER['HTTP_X_REWRITE_URL']))
-        {
+        if (isset($_SERVER['HTTP_X_REWRITE_URL'])) {
             $uri = $_SERVER['HTTP_X_REWRITE_URL'];
         }
         elseif (isset($_SERVER['REQUEST_URI']))
@@ -657,8 +651,7 @@ class QContext implements ArrayAccess
         elseif (isset($_SERVER['ORIG_PATH_INFO']))
         {
             $uri = $_SERVER['ORIG_PATH_INFO'];
-            if (! empty($_SERVER['QUERY_STRING']))
-            {
+            if (!empty($_SERVER['QUERY_STRING'])) {
                 $uri .= '?' . $_SERVER['QUERY_STRING'];
             }
         }
@@ -704,8 +697,7 @@ class QContext implements ArrayAccess
 
         $filename = basename($_SERVER['SCRIPT_FILENAME']);
 
-        if (basename($_SERVER['SCRIPT_NAME']) === $filename)
-        {
+        if (basename($_SERVER['SCRIPT_NAME']) === $filename) {
             $url = $_SERVER['SCRIPT_NAME'];
         }
         elseif (basename($_SERVER['PHP_SELF']) === $filename)
@@ -730,29 +722,26 @@ class QContext implements ArrayAccess
             {
                 $seg = $segs[$index];
                 $url = '/' . $seg . $url;
-                ++ $index;
+                ++$index;
             } while (($last > $index) && (false !== ($pos = strpos($path, $url))) && (0 != $pos));
         }
 
         // Does the baseUrl have anything in common with the request_uri?
         $request_uri = $this->requestUri();
 
-        if (0 === strpos($request_uri, $url))
-        {
+        if (0 === strpos($request_uri, $url)) {
             // full $url matches
             self::$_base_uri = $url;
             return self::$_base_uri;
         }
 
-        if (0 === strpos($request_uri, dirname($url)))
-        {
+        if (0 === strpos($request_uri, dirname($url))) {
             // directory portion of $url matches
             self::$_base_uri = rtrim(dirname($url), '/') . '/';
             return self::$_base_uri;
         }
 
-        if (! strpos($request_uri, basename($url)))
-        {
+        if (!strpos($request_uri, basename($url))) {
             // no match whatsoever; set it blank
             return '';
         }
@@ -762,8 +751,8 @@ class QContext implements ArrayAccess
         // from PATH_INFO or QUERY_STRING
         if ((strlen($request_uri) >= strlen($url))
             && ((false !== ($pos = strpos($request_uri, $url)))
-            && ($pos !== 0)))
-        {
+                && ($pos !== 0))
+        ) {
             $url = substr($request_uri, 0, $pos + strlen($url));
         }
 
@@ -800,8 +789,7 @@ class QContext implements ArrayAccess
         if (self::$_base_dir) return self::$_base_dir;
 
         $base_uri = $this->baseUri();
-        if (substr($base_uri, - 1, 1) == '/')
-        {
+        if (substr($base_uri, -1, 1) == '/') {
             $base_dir = $base_uri;
         }
         else
@@ -826,8 +814,7 @@ class QContext implements ArrayAccess
 
         if ($server_port) return $server_port;
 
-        if (isset($_SERVER['SERVER_PORT']))
-        {
+        if (isset($_SERVER['SERVER_PORT'])) {
             $server_port = intval($_SERVER['SERVER_PORT']);
         }
         else
@@ -835,15 +822,12 @@ class QContext implements ArrayAccess
             $server_port = 80;
         }
 
-        if (isset($_SERVER['HTTP_HOST']))
-        {
+        if (isset($_SERVER['HTTP_HOST'])) {
             $arr = explode(':', $_SERVER['HTTP_HOST']);
             $count = count($arr);
-            if ($count > 1)
-            {
+            if ($count > 1) {
                 $port = intval($arr[$count - 1]);
-                if ($port != $server_port)
-                {
+                if ($port != $server_port) {
                     $server_port = $port;
                 }
             }
@@ -896,13 +880,11 @@ class QContext implements ArrayAccess
         if (null === ($request_uri = $this->requestUri())) return '';
 
         // Remove the query string from REQUEST_URI
-        if (($pos = strpos($request_uri, '?')))
-        {
+        if (($pos = strpos($request_uri, '?'))) {
             $request_uri = substr($request_uri, 0, $pos);
         }
 
-        if ((null !== $base_url) && (false === ($pathinfo = substr($request_uri, strlen($base_url)))))
-        {
+        if ((null !== $base_url) && (false === ($pathinfo = substr($request_uri, strlen($base_url))))) {
             // If substr() returns false then PATH_INFO is set to an empty string
             $pathinfo = '';
         }
@@ -1028,8 +1010,7 @@ class QContext implements ArrayAccess
         $temp = 'HTTP_' . strtoupper(str_replace('-', '_', $header));
         if (!empty($_SERVER[$temp])) return $_SERVER[$temp];
 
-        if (function_exists('apache_request_headers'))
-        {
+        if (function_exists('apache_request_headers')) {
             $headers = apache_request_headers();
             if (!empty($headers[$header])) return $headers[$header];
         }
@@ -1128,17 +1109,14 @@ class QContext implements ArrayAccess
     {
         static $base_uri;
 
-        if (is_null($base_uri))
-        {
-            if(strlen(Q::ini('base_uri')) > 0)
-            {
+        if (is_null($base_uri)) {
+            if (strlen(Q::ini('base_uri')) > 0) {
                 $base_uri = Q::ini('base_uri');
             }
             else
             {
                 $base_uri = '/' . trim($this->baseDir(), '/');
-                if ($base_uri != '/')
-                {
+                if ($base_uri != '/') {
                     $base_uri .= '/';
                 }
             }
@@ -1146,8 +1124,7 @@ class QContext implements ArrayAccess
 
         $udi = $this->normalizeUDI($udi);
 
-        if (! is_array($params))
-        {
+        if (!is_array($params)) {
             $arr = Q::normalize($params, '/');
             $params = array();
             while ($key = array_shift($arr))
@@ -1160,30 +1137,27 @@ class QContext implements ArrayAccess
         $params = array_filter($params, 'strlen');
 
         // 处理 $opts
-        if (is_array($opts))
-        {
-            $mode   = !empty($opts['mode']) ? $opts['mode'] : self::$_url_mode;
+        if (is_array($opts)) {
+            $mode = !empty($opts['mode']) ? $opts['mode'] : self::$_url_mode;
             $script = !empty($opts['script'])
-                    ? $opts['script']
-                    : $this->scriptName();
-            $url    = strlen($opts['base_uri']) > 0
-                    ? rtrim($opts['base_uri'], '/') . '/'
-                    : $base_uri;
+                ? $opts['script']
+                : $this->scriptName();
+            $url = strlen($opts['base_uri']) > 0
+                ? rtrim($opts['base_uri'], '/') . '/'
+                : $base_uri;
         }
         else
         {
-            $mode   = self::$_url_mode;
-            $url    = $base_uri;
+            $mode = self::$_url_mode;
+            $url = $base_uri;
             $script = $this->scriptName();
         }
 
-        if (!is_null($this->_router) && $mode != self::URL_MODE_STANDARD)
-        {
+        if (!is_null($this->_router) && $mode != self::URL_MODE_STANDARD) {
             // 使用路由生成 URL
             $params = array_merge($params, $udi);
             $path = $this->_router->url($params, $route_name);
-            if (self::$_url_mode == self::URL_MODE_PATHINFO && $path != '/')
-            {
+            if (self::$_url_mode == self::URL_MODE_PATHINFO && $path != '/') {
                 $url .= $this->scriptName();
             }
             else
@@ -1202,8 +1176,7 @@ class QContext implements ArrayAccess
 
             $params = array_filter(array_merge($udi, $params), 'strlen');
             $url .= $script;
-            if (!empty($params))
-            {
+            if (!empty($params)) {
                 $url .= '?' . http_build_query($params, '', '&');
             }
         }
@@ -1263,19 +1236,17 @@ class QContext implements ArrayAccess
      */
     function normalizeUDI($udi, $return_array = true)
     {
-        if (! is_array($udi))
-        {
+        if (!is_array($udi)) {
             // 特殊处理 "", ".", "/" UDI解析
             // "", "." 返回当前动作
             // "/" 返回当前控制器默认动作
-            if(! is_string($udi) || $udi == '' || $udi == '.')
-            {
+            if (!is_string($udi) || $udi == '' || $udi == '.') {
                 $ns = $this->ns;
                 $module_name = $this->module_name;
                 $controller = $this->controller;
                 $action = $this->action;
             }
-            elseif($udi == '/')
+            elseif ($udi == '/')
             {
                 $ns = $this->ns;
                 $module_name = $this->module_name;
@@ -1284,8 +1255,7 @@ class QContext implements ArrayAccess
             }
             else
             {
-                if (strpos($udi, '::') !== false)
-                {
+                if (strpos($udi, '::') !== false) {
                     $arr = explode('::', $udi);
                     $ns = array_shift($arr);
                     $udi = array_shift($arr);
@@ -1295,8 +1265,7 @@ class QContext implements ArrayAccess
                     $ns = $this->ns;
                 }
 
-                if (strpos($udi, '@') !== false)
-                {
+                if (strpos($udi, '@') !== false) {
                     $arr = explode('@', $udi);
                     $module_name = array_pop($arr);
                     $udi = array_pop($arr);
@@ -1312,33 +1281,28 @@ class QContext implements ArrayAccess
             }
 
             $udi = array(
-                self::UDI_MODULE     => $module_name,
-                self::UDI_NAMESPACE  => $ns,
+                self::UDI_MODULE => $module_name,
+                self::UDI_NAMESPACE => $ns,
                 self::UDI_CONTROLLER => $controller,
-                self::UDI_ACTION     => $action,
+                self::UDI_ACTION => $action,
             );
         }
 
-        if (empty($udi[self::UDI_MODULE]))
-        {
+        if (empty($udi[self::UDI_MODULE])) {
             $udi[self::UDI_MODULE] = $this->module_name;
         }
-        if (empty($udi[self::UDI_NAMESPACE]))
-        {
+        if (empty($udi[self::UDI_NAMESPACE])) {
             $udi[self::UDI_NAMESPACE] = $this->ns;
         }
-        if (empty($udi[self::UDI_CONTROLLER]))
-        {
+        if (empty($udi[self::UDI_CONTROLLER])) {
             $udi[self::UDI_CONTROLLER] = $this->controller_name;
         }
-        if (empty($udi[self::UDI_ACTION]))
-        {
+        if (empty($udi[self::UDI_ACTION])) {
             $udi[self::UDI_ACTION] = self::UDI_DEFAULT_ACTION;
         }
         foreach (self::$_udi_defaults as $key => $value)
         {
-            if (empty($udi[$key]))
-            {
+            if (empty($udi[$key])) {
                 $udi[$key] = $value;
             }
             else
@@ -1347,8 +1311,7 @@ class QContext implements ArrayAccess
             }
         }
 
-        if (!$return_array)
-        {
+        if (!$return_array) {
             return "{$udi[self::UDI_NAMESPACE]}::{$udi[self::UDI_CONTROLLER]}/{$udi[self::UDI_ACTION]}@{$udi[self::UDI_MODULE]}";
         }
         else
@@ -1393,19 +1356,90 @@ class QContext implements ArrayAccess
         $udi = $this->normalizeUDI($udi);
 
         $this->controller_name = $udi[self::UDI_CONTROLLER];
-        $this->action_name     = $udi[self::UDI_ACTION];
-        $this->module_name     = $udi[self::UDI_MODULE];
-        $this->ns       = $udi[self::UDI_NAMESPACE];
+        $this->action_name = $udi[self::UDI_ACTION];
+        $this->module_name = $udi[self::UDI_MODULE];
+        $this->ns = $udi[self::UDI_NAMESPACE];
 
-        if ($this->module_name == self::UDI_DEFAULT_MODULE)
-        {
+        if ($this->module_name == self::UDI_DEFAULT_MODULE) {
             $this->module_name = null;
         }
-        if ($this->ns   == self::UDI_DEFAULT_NAMESPACE)
-        {
+        if ($this->ns == self::UDI_DEFAULT_NAMESPACE) {
             $this->ns = null;
         }
         return $this;
+    }
+
+    /**
+     * 返回当前请求的host（域名或IP）
+     * @return string
+     * @author yuk
+     */
+    function host()
+    {
+        static $host = null;
+        if ($host === null) {
+            $host = strtolower($_SERVER['SERVER_NAME'] ? $_SERVER['SERVER_NAME'] : $_SERVER['HTTP_HOST']);
+        }
+        return $host;
+    }
+
+    /**
+     * 返回当前请求站点的Url，包括协议，域名
+     * @return string
+     * @author yuk
+     */
+    function siteUrl()
+    {
+        static $siteUrl = null;
+
+        if ($siteUrl === null) {
+            $protocal = $this->protocol();
+            $host = $this->host();
+            $siteUrl = $protocal . '://' . $host;
+        }
+
+        return $siteUrl;
+    }
+
+    /**
+     * 在siteUrl()的基础上增加baseDir()
+     * @return string
+     * @author yuk
+     */
+    function baseUrl()
+    {
+        static $baseUrl = null;
+
+        if ($baseUrl === null) {
+            $baseUrl = $this->siteUrl() . $this->baseDir();
+        }
+
+        return $baseUrl;
+    }
+
+    /**
+     * 是否CLI环境的请求
+     * @return bool
+     * @author yuk
+     */
+    function isCli()
+    {
+        return isset($_SERVER['argc']) && $_SERVER['argc'] > 1;
+    }
+
+    /**
+     * 返回原始请求（forward前）对应的 UDI，如果没有forward过，使用requestUDI()就可以了。
+     * 将原始请求中包含的控制器、动作、名字空间和模块名提取出来，构造为一个 UDI。
+     *
+     * @param boolean $return_array 是否返回数组形式的 UDI
+     *
+     * @return string|array 对应当前请求的 UDI
+     */
+    function requestOriUDI($return_array = true)
+    {
+        //$this->action read from $_GET['action']
+        //$this->controller read from $_GET['controller']
+        return $this->normalizeUDI("{$this->controller}/{$this->action}", $return_array);
     }
 }
 
