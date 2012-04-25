@@ -290,13 +290,14 @@ class Helper_ImgCodeSimple
         switch ($code_type)
         {
         case 0:
-            $seed = '0123456789';
+            $seed = '0123456789';// numbers
             break;
         case 1:
-            $seed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+            $seed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'; // letters
             break;
         default:
-            $seed = '346789ABCDEFGHJKLMNPQRTUVWXYabcdefghjklmnpqrtuvwxy';
+            //$seed = '346789ABCDEFGHJKLMNPQRTUVWXYabcdefghjklmnpqrtuvwxy';
+            $seed = '346789ABCDEFGHJKLMNPQRTUVWXYabcdefghjkmnpqrtuvwxy'; // 去掉与数字1容易混淆的字母l
         }
         $code = '';
         $len = strlen($seed) - 1;
@@ -500,7 +501,8 @@ class Helper_ImgCodeTTF
     {
         $code_length = intval($this->_options['code_length']);
         if ($code_length <= 0) { $code_length = 4; }
-        $seed = '346789ABCDEFGHJKLMN346789PQRTUVWXYabcdefghj346789klmnpqrt346789uvwxy';
+        //$seed = '346789ABCDEFGHJKLMN346789PQRTUVWXYabcdefghj346789klmnpqrt346789uvwxy';
+        $seed = '346789ABCDEFGHJKLMN346789PQRTUVWXYabcdefghj346789kmnpqrt346789uvwxy'; // 去掉与数字1容易混淆的字母l
 
         $code = '';
         $len = strlen($seed) - 1;
