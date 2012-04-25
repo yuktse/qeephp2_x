@@ -141,13 +141,16 @@ abstract class Helper_Array
         if ($value_field) {
             foreach ($arr as $row)
             {
-                $ret[$row[$key_field]] = $row[$value_field];
+                if (!isset($row[$key_field])) continue;
+                $val = $row[$value_field] ? $row[$value_field] : null;
+                $ret[$row[$key_field]] = $val;
             }
         }
         else
         {
             foreach ($arr as $row)
             {
+                if (!isset($row[$key_field])) continue;
                 $ret[$row[$key_field]] = $row;
             }
         }
