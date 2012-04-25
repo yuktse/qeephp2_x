@@ -393,23 +393,32 @@ class QColl implements Iterator, ArrayAccess, Countable
      *
      * @param string $key_name
      * @param string $value_name
+     * @param string $groupByKey add by yuk
      *
      * @return array
      */
-    function toHashMap($key_name, $value_name = null)
+    function toHashMap($key_name, $value_name = null, $groupByKey = '')
     {
         $ret = array();
         if ($value_name) {
             foreach ($this->_coll as $obj)
             {
-                $ret[$obj[$key_name]] = $obj[$value_name];
+                if ($groupByKey) {
+                    $ret[$obj[$key_name]][] = $obj[$value_name];
+                } else {
+                    $ret[$obj[$key_name]] = $obj[$value_name];
+                }
             }
         }
         else
         {
             foreach ($this->_coll as $obj)
             {
-                $ret[$obj[$key_name]] = $obj;
+                if ($groupByKey) {
+                    $ret[$obj[$key_name]][] = $obj;
+                } else {
+                    $ret[$obj[$key_name]] = $obj;
+                }
             }
         }
 
@@ -642,6 +651,43 @@ class QColl implements Iterator, ArrayAccess, Countable
     {
         $this->_checkType($item);
         array_unshift($this->_coll, $item);
+        return $this;
+    }
+
+    /**
+     * 在集合中查找$item并删除
+     * @param Object $item
+     * @return boolean
+     * @author yuk
+     */
+    function remove($item)
+    {
+        foreach ($this as $index => $obj) {
+            if ($item->id() == $obj->id()) {
+                $this->offsetUnset($index);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 返回此集合的类型
+     * @return string
+     */
+    function type()
+    {
+        return $this->_type;
+    }
+
+    /**
+     * 将集合元素反转排列
+     * @return QColl
+     */
+    function reverse()
+    {
+        array_reverse($this->_coll);
         return $this;
     }
 
