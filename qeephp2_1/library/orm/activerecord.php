@@ -19,8 +19,8 @@
  * @package orm
  */
 abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
-                                                    QDB_ActiveRecord_Interface,
-                                                    ArrayAccess
+    QDB_ActiveRecord_Interface,
+    ArrayAccess
 {
     /**
      * 对象所有属性的值
@@ -84,8 +84,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
     function __construct($data = null, $names_style = QDB::PROP, $from_storage = false)
     {
         $this->_class_name = get_class($this);
-        if (! isset(self::$_meta[$this->_class_name]))
-        {
+        if (!isset(self::$_meta[$this->_class_name])) {
             self::$_meta[$this->_class_name] = QDB_ActiveRecord_Meta::instance($this->_class_name);
         }
         $meta = self::$_meta[$this->_class_name];
@@ -94,13 +93,11 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         // 设置对象属性默认值
         $this->_props = $meta->default_props;
 
-        if (is_array($data) || $data instanceof Iterator)
-        {
+        if (is_array($data) || $data instanceof Iterator) {
             $this->changeProps($data, $names_style, null, $from_storage, true);
         }
 
-        if ($from_storage)
-        {
+        if ($from_storage) {
             $this->_is_new_record = false;
         }
 
@@ -121,8 +118,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     function id($cached = true)
     {
-        if($cached && $this->_id !== false)
-        {
+        if ($cached && $this->_id !== false) {
             return $this->_id;
         }
 
@@ -132,8 +128,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
             $id[$name] = $this->{$name};
         }
 
-        if (count($id) == 1)
-        {
+        if (count($id) == 1) {
             $id = reset($id);
         }
 
@@ -150,8 +145,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     function idname()
     {
-        if (self::$_meta[$this->_class_name]->idname_count > 1)
-        {
+        if (self::$_meta[$this->_class_name]->idname_count > 1) {
             return self::$_meta[$this->_class_name]->idname;
         }
         else
@@ -191,8 +185,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
     function save($recursion = 99, $save_method = 'save')
     {
         $inherit_type_field = self::$_meta[$this->_class_name]->inherit_type_field;
-        if ($inherit_type_field && empty($this->_props[$inherit_type_field]))
-        {
+        if ($inherit_type_field && empty($this->_props[$inherit_type_field])) {
             $this->_props[$inherit_type_field] = $this->_class_name;
         }
 
@@ -204,38 +197,37 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         {
             switch (strtolower($save_method))
             {
-            case 'create':
-                $exception_event = self::CREATE_EXCEPTION;
-                $this->_create($recursion);
-                break;
-            case 'update':
-                $exception_event = self::UPDATE_EXCEPTION;
-                $this->_update($recursion);
-                break;
-            case 'replace':
-                $exception_event = self::REPLACE_EXCEPTION;
-                $this->_replace($recursion);
-                break;
-            case 'save':
-            default:
-                if ($this->isNewRecord())
-                {
-                    try
-                    {
-                        $exception_event = self::CREATE_EXCEPTION;
-                        $this->_create($recursion);
+                case 'create':
+                    $exception_event = self::CREATE_EXCEPTION;
+                    $this->_create($recursion);
+                    break;
+                case 'update':
+                    $exception_event = self::UPDATE_EXCEPTION;
+                    $this->_update($recursion);
+                    break;
+                case 'replace':
+                    $exception_event = self::REPLACE_EXCEPTION;
+                    $this->_replace($recursion);
+                    break;
+                case 'save':
+                default:
+                    if ($this->isNewRecord()) {
+                        try
+                        {
+                            $exception_event = self::CREATE_EXCEPTION;
+                            $this->_create($recursion);
+                        }
+                        catch (QDB_Exception_DuplicateKey $ex)
+                        {
+                            $exception_event = self::UPDATE_EXCEPTION;
+                            $this->_update($recursion);
+                        }
                     }
-                    catch (QDB_Exception_DuplicateKey $ex)
+                    else
                     {
                         $exception_event = self::UPDATE_EXCEPTION;
                         $this->_update($recursion);
                     }
-                }
-                else
-                {
-                    $exception_event = self::UPDATE_EXCEPTION;
-                    $this->_update($recursion);
-                }
             }
 
             $this->_after_save();
@@ -244,8 +236,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         }
         catch (Exception $ex)
         {
-            if (!empty($this->__exception_trap[$exception_event]))
-            {
+            if (!empty($this->__exception_trap[$exception_event])) {
                 foreach ($this->__exception_trap[$exception_event] as $callback)
                 {
                     array_unshift($callback[1], $this);
@@ -271,7 +262,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     function __clone()
     {
-        foreach(self::$_meta[$this->_class_name]->idname as $name)
+        foreach (self::$_meta[$this->_class_name]->idname as $name)
         {
             $this->_props[$name] = self::$_meta[$this->_class_name]->table_meta[$name]['default'];
         }
@@ -300,15 +291,14 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     function reload()
     {
-        if (self::$_meta[$this->_class_name]->idname_count > 1)
-        {
+        if (self::$_meta[$this->_class_name]->idname_count > 1) {
             // 复合主键
             $where = $this->id();
         }
         else
         {
             // 单一主键
-            $where = array( reset(self::$_meta[$this->_class_name]->idname) => $this->id() );
+            $where = array(reset(self::$_meta[$this->_class_name]->idname) => $this->id());
         }
 
         $row = self::$_meta[$this->_class_name]->find($where)->asArray()->recursion(0)->query();
@@ -332,8 +322,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         $meta = self::$_meta[$this->_class_name];
         /* @var $meta QDB_ActiveRecord_Meta */
 
-        if ($mode == 'create')
-        {
+        if ($mode == 'create') {
             $this->_before_validate_on_create();
             $this->_event(self::BEFORE_VALIDATE_ON_CREATE);
             $this->_before_validate_on_create_post();
@@ -350,19 +339,17 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
             $this->_event(self::BEFORE_VALIDATE_ON_UPDATE);
             $this->_before_validate_on_update_post();
             $validation_props = $this->changes();
-        }else {
-        	$validation_props=null;
+        } else {
+            $validation_props = null;
         }
 
         $error = $meta->validate($this->_props, $validation_props, $mode);
 
-        if (!empty($error))
-        {
+        if (!empty($error)) {
             throw new QDB_ActiveRecord_ValidateFailedException($error, $this);
         }
 
-        if ($mode == 'create')
-        {
+        if ($mode == 'create') {
             $this->_after_validate_on_create();
             $this->_event(self::AFTER_VALIDATE_ON_CREATE);
             $this->_after_validate_on_create_post();
@@ -385,8 +372,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
     function destroy()
     {
         $id = $this->id(false); // 不使用缓存
-        if (empty($id))
-        {
+        if (empty($id)) {
             throw new QDB_ActiveRecord_DestroyWithoutIdException($this);
         }
 
@@ -404,8 +390,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         }
 
         // 确定删除当前对象的条件
-        if ($meta->idname_count > 1)
-        {
+        if ($meta->idname_count > 1) {
             $where = $id;
         }
         else
@@ -443,8 +428,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         $meta = self::$_meta[$this->_class_name];
         /* @var $meta QDB_ActiveRecord_Meta */
 
-        if ($attr_accessible)
-        {
+        if ($attr_accessible) {
             $attr_accessible = array_flip(Q::normalize($attr_accessible));
             $check_attr_accessible = true;
         }
@@ -457,9 +441,10 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         // 将数组赋值给对象属性
         foreach ($arr as $prop_name => $value)
         {
-            if ($names_style == QDB::FIELD)
-            {
-                if (!isset($meta->fields2props[$prop_name])) { continue; }
+            if ($names_style == QDB::FIELD) {
+                if (!isset($meta->fields2props[$prop_name])) {
+                    continue;
+                }
                 $prop_name = $meta->fields2props[$prop_name];
             }
             elseif (!isset($meta->props[$prop_name]))
@@ -467,33 +452,31 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
                 continue;
             }
 
-            if ($_from_storage)
-            {
-                if ($meta->props[$prop_name]['virtual'])
-                {
+            if ($_from_storage) {
+                if ($meta->props[$prop_name]['virtual']) {
                     $this->{$prop_name} = $value;
                     unset($this->_changed_props[$prop_name]);
                 }
                 else
                 {
                     $this->_props[$prop_name] = is_null($value)
-                            ? NULL
-                            : self::_typed($value, $meta->props[$prop_name]['ptype']);
+                        ? NULL
+                        : self::_typed($value, $meta->props[$prop_name]['ptype']);
                 }
             }
             else
             {
-                if ($check_attr_accessible)
-                {
-                    if (!isset($attr_accessible[$prop_name])) { continue; }
+                if ($check_attr_accessible) {
+                    if (!isset($attr_accessible[$prop_name])) {
+                        continue;
+                    }
                 }
                 elseif (isset($meta->attr_protected[$prop_name]))
                 {
                     continue;
                 }
 
-                if ($_ignore_readonly)
-                {
+                if ($_ignore_readonly) {
                     $this->changePropForce($prop_name, $value);
                 }
                 else
@@ -516,12 +499,11 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     function changePropForce($prop_name, $prop_value)
     {
-    	$meta = self::$_meta[$this->_class_name];
-    	/* @var $meta QDB_ActiveRecord_Meta */
-    	if (!isset($meta->props[$prop_name]))
-    	{
-    		return $this;
-    	}
+        $meta = self::$_meta[$this->_class_name];
+        /* @var $meta QDB_ActiveRecord_Meta */
+        if (!isset($meta->props[$prop_name])) {
+            return $this;
+        }
 
         try
         {
@@ -548,16 +530,14 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     function changed($props_name = null)
     {
-        if (is_null($props_name))
-        {
-            return ! empty($this->_changed_props);
+        if (is_null($props_name)) {
+            return !empty($this->_changed_props);
         }
 
         $props_name = Q::normalize($props_name);
         foreach ($props_name as $prop_name)
         {
-            if (isset($this->_changed_props[$prop_name]))
-            {
+            if (isset($this->_changed_props[$prop_name])) {
                 return true;
             }
         }
@@ -576,8 +556,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         $props_name = Q::normalize($props_name);
         foreach ($props_name as $prop_name)
         {
-            if (! isset(self::$_meta[$this->_class_name]->props[$prop_name]))
-            {
+            if (!isset(self::$_meta[$this->_class_name]->props[$prop_name])) {
                 continue;
             }
             $this->_changed_props[$prop_name] = $prop_name;
@@ -605,8 +584,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     function cleanChanges($props = null)
     {
-        if ($props)
-        {
+        if ($props) {
             $props = Q::normalize($props);
             foreach ($props as $prop)
             {
@@ -635,8 +613,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         /* @var $meta QDB_ActiveRecord_Meta */
         foreach ($meta->props as $prop_name => $config)
         {
-            if ($names_style == QDB::PROP)
-            {
+            if ($names_style == QDB::PROP) {
                 $name = $prop_name;
             }
             else
@@ -644,10 +621,8 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
                 $name = $meta->props2fields[$prop_name];
             }
 
-            if ($config['assoc'])
-            {
-                if ($recursion > 0 && isset($this->_props[$prop_name]))
-                {
+            if ($config['assoc']) {
+                if ($recursion > 0 && isset($this->_props[$prop_name])) {
                     $data[$name] = $this->{$prop_name}->toArray($recursion - 1, $names_style);
                 }
             }
@@ -685,28 +660,28 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     function __get($prop_name)
     {
-        if (!isset(self::$_meta[$this->_class_name]->props[$prop_name]))
-        {
+        if (!isset(self::$_meta[$this->_class_name])) { // 不先判断self::$_meta[$this->_class_name]的话，有时serialized obj会出错。add by yuk
+            self::$_meta[$this->_class_name] = QDB_ActiveRecord_Meta::instance($this->_class_name);
+        }
+
+        if (!isset(self::$_meta[$this->_class_name]->props[$prop_name])) {
             throw new QDB_ActiveRecord_UndefinedPropException($this->_class_name, $prop_name);
         }
 
         $config = self::$_meta[$this->_class_name]->props[$prop_name];
-        if (!empty($config['getter']))
-        {
+        if (!empty($config['getter'])) {
             // 如果指定了属性的 getter，则通过 getter 方法来获得属性值
             list($callback, $custom_parameters) = $config['getter'];
-            if (!is_array($callback))
-            {
+            if (!is_array($callback)) {
                 $callback = array($this, $callback);
                 $args = array($prop_name, $custom_parameters, & $this->_props);
-            }else {
-                $args = array($this,$prop_name, $custom_parameters, & $this->_props);
+            } else {
+                $args = array($this, $prop_name, $custom_parameters, & $this->_props);
             }
             return call_user_func_array($callback, $args);
         }
 
-        if (!isset($this->_props[$prop_name]) && $config['assoc'])
-        {
+        if (!isset($this->_props[$prop_name]) && $config['assoc']) {
             // 如果属性是一个关联，并且没有值，则通过 QDB_ActiveRecord_Meta::relatedObjects() 获得关联对象
             $this->_props[$prop_name] = self::$_meta[$this->_class_name]->relatedObjects($this, $prop_name);
         }
@@ -725,42 +700,40 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         $meta = self::$_meta[$this->_class_name];
         /* @var $meta QDB_ActiveRecord_Meta */
 
-        if (! isset($meta->props[$prop_name]))
-        {
+        if (!isset($meta->props[$prop_name])) {
             throw new QDB_ActiveRecord_UndefinedPropException($this->_class_name, $prop_name);
         }
 
         $config = $meta->props[$prop_name];
-        if ($config['readonly'])
-        {
-            throw new QDB_ActiveRecord_ChangingReadonlyPropException($this->_class_name, $prop_name);
+        if ($config['readonly']) {
+            return false; // 如果是只读属性，直接返回就行了，抛出异常不利于批量赋值。yuk
+            //throw new QDB_ActiveRecord_ChangingReadonlyPropException($this->_class_name, $prop_name);
         }
 
-        if (!empty($config['setter']))
-        {
+        if (!empty($config['setter'])) {
             // 如果指定了属性的 setter，则通过 setter 方法来修改属性值
             list($callback, $custom_parameters) = $config['setter'];
-            if (!is_array($callback))
-            {
+            if (!is_array($callback)) {
                 $callback = array($this, $callback);
                 $args = array($value, $prop_name, $custom_parameters, & $this->_props);
-            }else {
-                $args = array($this,$value, $prop_name, $custom_parameters, & $this->_props);
+            } else {
+                $args = array($this, $value, $prop_name, $custom_parameters, & $this->_props);
             }
             return call_user_func_array($callback, $args);
         }
 
-        if ($config['assoc'])
-        {
+        if ($config['assoc']) {
             // 在指定关联对象时，要进行类型检查
-            if ($config['assoc'] == QDB::HAS_ONE || $config['assoc'] == QDB::BELONGS_TO)
-            {
-                if ($value instanceof $config['assoc_class'])
-                {
+            if ($config['assoc'] == QDB::HAS_ONE || $config['assoc'] == QDB::BELONGS_TO) {
+
+                if (is_array($value)) { // 自动将数据转换为对象，方便，但不安全，不需要的同学注释掉这三行 yuk
+                    $value = new $config['assoc_class']($value);
+                }
+
+                if ($value instanceof $config['assoc_class']) {
                     $this->_props[$prop_name] = $value;
 
-                    if ($config['assoc'] == QDB::BELONGS_TO)
-                    {
+                    if ($config['assoc'] == QDB::BELONGS_TO) {
                         $assoc = $meta->assoc($prop_name);
                         $this->_props[$assoc->source_key] = $value[$assoc->target_key];
                         $this->_changed_props[$assoc->source_key] = $assoc->source_key;
@@ -775,8 +748,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
             }
             else
             {
-                if (is_array($value))
-                {
+                if (is_array($value)) {
                     $this->_props[$prop_name] = QColl::createFromArray($value, $config['assoc_class']);
                 }
                 elseif ($value instanceof Iterator)
@@ -791,10 +763,18 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
 
             $this->_changed_props[$prop_name] = $prop_name;
         }
-        elseif ($this->_props[$prop_name] !== $value)
+        /*elseif ($this->_props[$prop_name] !== $value)
         {
             $this->_props[$prop_name] = self::_typed($value, $config['ptype']);
             $this->_changed_props[$prop_name] = $prop_name;
+        }*/
+        else {
+            // 先将$value做类型转换，再与原值判断。可以避免提交的字符串'5'与原值数字5，会标记为changed。yuk
+            $value = self::_typed($value, $config['ptype']);
+            if ($this->_props[$prop_name] !== $value) {
+                $this->_props[$prop_name] = self::_typed($value, $config['ptype']);
+                $this->_changed_props[$prop_name] = $prop_name;
+            }
         }
     }
 
@@ -820,8 +800,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     function __call($method, array $args)
     {
-        if (isset(self::$_meta[$this->_class_name]->methods[$method]))
-        {
+        if (isset(self::$_meta[$this->_class_name]->methods[$method])) {
             $callback = self::$_meta[$this->_class_name]->methods[$method];
             foreach ($args as $arg)
             {
@@ -833,8 +812,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
 
         // getXX() 和 setXX() 方法
         $prefix = substr($method, 0, 3);
-        if ($prefix == 'get')
-        {
+        if ($prefix == 'get') {
             $prop_name = substr($method, 3);
             return $this->{$prop_name};
         }
@@ -890,7 +868,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     function offsetUnset($prop_name)
     {
-    	$this->{$prop_name} = null;
+        $this->{$prop_name} = null;
     }
 
     /**
@@ -942,8 +920,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
     protected function _event($event)
     {
         $meta = self::$_meta[$this->_class_name];
-        if (empty($meta->callbacks[$event]))
-        {
+        if (empty($meta->callbacks[$event])) {
             return;
         }
 
@@ -982,20 +959,17 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
             $mapping_name = $assoc->mapping_name;
             $source_key = $assoc->source_key;
 
-            if (empty($this->_props[$mapping_name]))
-            {
-                if (empty($this->_props[$source_key]))
-                {
+            if (empty($this->_props[$mapping_name])) {
+                if (empty($this->_props[$source_key])) {
                     if ($this->_props[$source_key] === $meta->props[$source_key]['default_value']
-                        && !is_null($meta->props[$source_key]['default_value']))
-                    {
+                        && !is_null($meta->props[$source_key]['default_value'])
+                    ) {
                         $this->changePropForce($source_key, $meta->props[$source_key]['default_value']);
                     }
                     else
                     {
                         // 如果BELONGS TO关联设置了允许空值，则跳过抛出异常
-                        if(empty($assoc->source_meta->props[$mapping_name]['assoc_params']['skip_empty']))
-                        {
+                        if (empty($assoc->source_meta->props[$mapping_name]['assoc_params']['skip_empty'])) {
                             throw new QDB_ActiveRecord_ExpectsAssocPropException($this->_class_name, $mapping_name);
                         }
                     }
@@ -1013,8 +987,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         $save_data = array();
         foreach ($this->_props as $prop_name => $value)
         {
-            if (isset($meta->create_reject[$prop_name]) || $meta->props[$prop_name]['virtual'])
-            {
+            if (isset($meta->create_reject[$prop_name]) || $meta->props[$prop_name]['virtual']) {
                 continue;
             }
             $save_data[$meta->props2fields[$prop_name]] = $value;
@@ -1032,8 +1005,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         // 遍历关联的对象，并调用对象的save()方法
         foreach ($meta->associations as $prop => $assoc)
         {
-            if ($assoc->type == QDB::BELONGS_TO || !isset($this->_props[$prop]))
-            {
+            if ($assoc->type == QDB::BELONGS_TO || !isset($this->_props[$prop])) {
                 continue;
             }
 
@@ -1042,22 +1014,23 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
             $assoc->init();
             $source_key_value = $this->{$assoc->source_key};
 
-            if (strlen($source_key_value) == 0)
-            {
+            if (strlen($source_key_value) == 0) {
                 throw new QDB_ActiveRecord_ExpectsAssocPropException($this->_class_name, $assoc->source_key);
             }
 
             $assoc->onSourceSave($this, $recursion - 1);
         }
         // 成功保存到数据库后已经不是新记录了
-		$this->_is_new_record=false;
+        $this->_is_new_record = false;
+        // 清除所有属性的“脏”状态，在触发事件之前就要清除，否则事件中如果又有save动作，会有意外行为。yuk
+        $this->_changed_props = array();
         // 引发after_create事件
         $this->_after_create();
         $this->_event(self::AFTER_CREATE);
         $this->_after_create_post();
 
         // 清除所有属性的“脏”状态
-        $this->_changed_props = array();
+        //$this->_changed_props = array(); // removed by yuk
     }
 
     /**
@@ -1073,38 +1046,35 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         /**
          * 仅在有属性更新时才引发 update 事件，并进行更新操作
          */
-        if (!empty($this->_changed_props))
-        {
-	        // 根据 update_autofill 设置对属性进行填充
-	        $this->_autofill('update');
+        if (!empty($this->_changed_props)) {
+            // 根据 update_autofill 设置对属性进行填充
+            $this->_autofill('update');
 
-	        // 引发 before_update 事件
-	        $this->_before_update();
-	        $this->_event(self::BEFORE_UPDATE);
-	        $this->_before_update_post();
+            // 引发 before_update 事件
+            $this->_before_update();
+            $this->_event(self::BEFORE_UPDATE);
+            $this->_before_update_post();
 
             // 进行 update 验证
             $this->validate('update', true);
 
-	        // 准备要更新到数据库的数据
-	        $save_data = array();
-	        foreach ($this->_props as $prop_name => $value)
-	        {
-	            // 根据 update_reject 过滤掉不允许更新的属性
-	            if (isset($meta->update_reject[$prop_name])
-                    || ($meta->props[$prop_name]['virtual'] && !isset($meta->table_meta[$prop_name])))
-	            {
-	                continue;
-	            }
-	            // 只有指定为脏状态的属性才更新到数据库
-	            if (isset($this->_changed_props[$prop_name]))
-	            {
-	                $save_data[$meta->props2fields[$prop_name]] = $value;
-	            }
-	        }
-
-            if (!empty($save_data))
+            // 准备要更新到数据库的数据
+            $save_data = array();
+            foreach ($this->_props as $prop_name => $value)
             {
+                // 根据 update_reject 过滤掉不允许更新的属性
+                if (isset($meta->update_reject[$prop_name])
+                    || ($meta->props[$prop_name]['virtual'] && !isset($meta->table_meta[$prop_name]))
+                ) {
+                    continue;
+                }
+                // 只有指定为脏状态的属性才更新到数据库
+                if (isset($this->_changed_props[$prop_name])) {
+                    $save_data[$meta->props2fields[$prop_name]] = $value;
+                }
+            }
+
+            if (!empty($save_data)) {
                 // 确定更新条件
                 $conditions = array();
                 foreach ($meta->table->getPK() as $field_name)
@@ -1113,8 +1083,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
                     unset($save_data[$field_name]);
                     $conditions[$field_name] = $this->_props[$prop_name];
                 }
-                if (!empty($save_data))
-                {
+                if (!empty($save_data)) {
                     // 将名值对保存到数据库
                     $meta->table->update($save_data, $conditions);
                 }
@@ -1124,29 +1093,28 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
         // 遍历关联的对象，并调用对象的save()方法
         foreach ($meta->associations as $prop => $assoc)
         {
-            if (! isset($this->_props[$prop]))
-            {
+            if (!isset($this->_props[$prop])) {
                 continue;
             }
 
             $assoc->init();
             $source_key_value = $this->{$assoc->source_key};
 
-            if (strlen($source_key_value) == 0)
-            {
+            if (strlen($source_key_value) == 0) {
                 throw new QDB_ActiveRecord_ExpectsAssocPropException($this->_class_name, $assoc->source_key);
             }
 
             $assoc->onSourceSave($this, $recursion - 1);
         }
-
+        // 清除所有属性的“脏”状态，在触发事件之前就要清除，否则事件中如果又有save动作，会有意外行为。yuk
+        $this->_changed_props = array();
         // 引发 after_update 事件
         $this->_after_update();
         $this->_event(self::AFTER_UPDATE);
         $this->_after_update_post();
 
         // 清除所有属性的“脏”状态
-        $this->_changed_props = array();
+        // $this->_changed_props = array();
     }
 
     /**
@@ -1156,10 +1124,8 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     protected function _replace($recursion = 99)
     {
-        if ($this->isNewRecord() || $this->changed())
-        {
-            if ($this->isNewRecord())
-            {
+        if ($this->isNewRecord() || $this->changed()) {
+            if ($this->isNewRecord()) {
                 try
                 {
                     // 如果是尚未保存到数据库的记录，则创建新记录
@@ -1190,8 +1156,7 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
 
         foreach ($fill_props as $prop => $fill)
         {
-            if ($fill === self::AUTOFILL_DATETIME)
-            {
+            if ($fill === self::AUTOFILL_DATETIME) {
                 $this->_props[$prop] = date('Y-m-d H:i:s', CURRENT_TIMESTAMP);
             }
             elseif ($fill === self::AUTOFILL_TIMESTAMP)
@@ -1229,23 +1194,23 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
      */
     static protected function _typed($value, $ptype)
     {
-        switch($ptype)
+        switch ($ptype)
         {
-        case 'int1':
-        case 'int2':
-        case 'int3':
-        case 'int4':
-        case 'timestamp':
-            return intval($value);
-        case 'float':
-        case 'double':
-        case 'dec':
-        	return doubleval($value);
-        case 'bool':
-            return (bool)$value;
-        case 'date':
-        case 'datetime':
-            return empty($value) ? null : $value;
+            case 'int1':
+            case 'int2':
+            case 'int3':
+            case 'int4':
+            case 'timestamp':
+                return intval($value);
+            case 'float':
+            case 'double':
+            case 'dec':
+                return doubleval($value);
+            case 'bool':
+                return (bool)$value;
+            case 'date':
+            case 'datetime':
+                return empty($value) ? null : $value;
         }
 
         return $value;
@@ -1254,107 +1219,192 @@ abstract class QDB_ActiveRecord_Abstract implements QDB_ActiveRecord_Callbacks,
     /**
      * 事件回调：开始验证之前
      */
-    protected function _before_validate() {}
+    protected function _before_validate()
+    {
+    }
 
-    protected function _before_validate_post() {}
+    protected function _before_validate_post()
+    {
+    }
 
     /**
      * 事件回调：为创建记录进行的验证开始之前
      */
-    protected function _before_validate_on_create() {}
+    protected function _before_validate_on_create()
+    {
+    }
 
-    protected function _before_validate_on_create_post() {}
+    protected function _before_validate_on_create_post()
+    {
+    }
 
     /**
      * 事件回调：为创建记录进行的验证完成之后
      */
-    protected function _after_validate_on_create() {}
+    protected function _after_validate_on_create()
+    {
+    }
 
-    protected function _after_validate_on_create_post() {}
+    protected function _after_validate_on_create_post()
+    {
+    }
 
     /**
      * 事件回调：为更新记录进行的验证开始之前
      */
-    protected function _before_validate_on_update() {}
+    protected function _before_validate_on_update()
+    {
+    }
 
-    protected function _before_validate_on_update_post() {}
+    protected function _before_validate_on_update_post()
+    {
+    }
 
     /**
      * 事件回调：为更新记录进行的验证完成之后
      */
-    protected function _after_validate_on_update() {}
+    protected function _after_validate_on_update()
+    {
+    }
 
-    protected function _after_validate_on_update_post() {}
+    protected function _after_validate_on_update_post()
+    {
+    }
 
     /**
      * 事件回调：验证完成之后
      */
-    protected function _after_validate() {}
+    protected function _after_validate()
+    {
+    }
 
-    protected function _after_validate_post() {}
+    protected function _after_validate_post()
+    {
+    }
 
     /**
      * 事件回调：保存记录之前
      */
-    protected function _before_save() {}
+    protected function _before_save()
+    {
+    }
 
-    protected function _before_save_post() {}
+    protected function _before_save_post()
+    {
+    }
 
     /**
      * 事件回调：保存记录之后
      */
-    protected function _after_save() {}
+    protected function _after_save()
+    {
+    }
 
-    protected function _after_save_post() {}
+    protected function _after_save_post()
+    {
+    }
 
     /**
      * 事件回调：创建记录之前
      */
-    protected function _before_create() {}
+    protected function _before_create()
+    {
+    }
 
-    protected function _before_create_post() {}
+    protected function _before_create_post()
+    {
+    }
 
     /**
      * 事件回调：创建记录之后
      */
-    protected function _after_create() {}
+    protected function _after_create()
+    {
+    }
 
-    protected function _after_create_post() {}
+    protected function _after_create_post()
+    {
+    }
 
     /**
      * 事件回调：更新记录之前
      */
-    protected function _before_update() {}
+    protected function _before_update()
+    {
+    }
 
-    protected function _before_update_post() {}
+    protected function _before_update_post()
+    {
+    }
 
     /**
      * 事件回调：更新记录之后
      */
-    protected function _after_update() {}
+    protected function _after_update()
+    {
+    }
 
-    protected function _after_update_post() {}
+    protected function _after_update_post()
+    {
+    }
 
     /**
      * 事件回调：删除记录之前
      */
-    protected function _before_destroy() {}
+    protected function _before_destroy()
+    {
+    }
 
-    protected function _before_destroy_post() {}
+    protected function _before_destroy_post()
+    {
+    }
 
     /**
      * 事件回调：删除记录之后
      */
-    protected function _after_destroy() {}
+    protected function _after_destroy()
+    {
+    }
 
-    protected function _after_destroy_post() {}
+    protected function _after_destroy_post()
+    {
+    }
 
     /**
      * 事件回调：对象构造之后
      */
-    protected function _after_initialize() {}
+    protected function _after_initialize()
+    {
+    }
 
-    protected function _after_initialize_post() {}
+    protected function _after_initialize_post()
+    {
+    }
+
+    /**
+     * 仅保存指定的属性，其它属性继续保持原来的脏状态
+     * @param  $props
+     *
+     * @return QDB_ActiveRecord_Abstract 连贯接口
+     * @author yuk
+     */
+    function saveProps($props)
+    {
+        $props = Q::normalize($props);
+        $changedProps = $this->changes();
+
+        foreach ($props as $prop) {
+            unset($changedProps[$prop]);
+        }
+
+        $this->cleanChanges();
+        $this->willChanged($props);
+        $this->save();
+
+        $this->willChanged($changedProps);
+
+        return $this;
+    }
 }
 
 
