@@ -20,37 +20,54 @@
  */
 class Control_DropdownList extends QUI_Control_Abstract
 {
-	function render()
-	{
+    function render()
+    {
         $selected = $this->_extract('selected');
-        $value    = $this->_extract('value');
-		$items    = $this->_extract('items');
+        $value = $this->_extract('value');
+        $items = $this->_extract('items');
 
-        if (strlen($value) && strlen($selected) == 0)
-        {
+        /**
+         * 增加$non_htmlspecialchars选项，有些情况不需要做htmlspecialchars转换。yuk
+         */
+        $non_htmlspecialchars = $this->_extract('non_htmlspecialchars');
+
+        /**
+         * 增加$emptyText和$emptyVal，通常用作提示，例如'emptyText' => '--请选择国籍--'。yuk
+         */
+        $emptyText = $this->_extract('emptyText');
+        $emptyVal = $this->_extract('emptyVal');
+
+        if (strlen($value) && strlen($selected) == 0) {
             $selected = $value;
         }
 
-		$out = '<select ';
-		$out .= $this->_printIdAndName();
-		$out .= $this->_printDisabled();
-		$out .= $this->_printAttrs();
-		$out .= ">\n";
+        if ($emptyText) {
+            $items = array($emptyVal => $emptyText) + $items;
+        }
+
+        $out = '<select ';
+        $out .= $this->_printIdAndName();
+        $out .= $this->_printDisabled();
+        $out .= $this->_printAttrs();
+        $out .= ">\n";
 
         foreach ((array)$items as $value => $caption)
         {
-			$out .= '<option value="' . htmlspecialchars($value) . '" ';
-            if ($value == $selected && strlen($value) == strlen($selected))
-            {
+            if (!$non_htmlspecialchars) {
+                $value = htmlspecialchars($value);
+                $caption = htmlspecialchars($caption);
+            }
+            $out .= '<option value="' . $value . '" ';
+            if ($value == $selected && strlen($value) == strlen($selected)) {
                 $out .= 'selected="selected" ';
             }
-			$out .= '>';
-			$out .= htmlspecialchars($caption);
-			$out .= "</option>\n";
-		}
-		$out .= "</select>\n";
+            $out .= '>';
+            $out .= $caption;
+            $out .= "</option>\n";
+        }
+        $out .= "</select>\n";
 
         return $out;
-	}
+    }
 }
 
